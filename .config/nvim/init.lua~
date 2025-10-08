@@ -4,8 +4,6 @@ require("telescope").setup({
     mappings = { i = { ["<Esc>"] = require("telescope.actions").close } },
   },
 })
-require("auto-save").setup()
-
 -- Leader
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
@@ -24,10 +22,10 @@ vim.opt.autoindent = true
 vim.opt.expandtab = true
 
 -- Telescope keybinds
-vim.keymap.set("n", "<leader>f",  "<cmd>Telescope find_files<cr>")
-vim.keymap.set("n", "<leader>g",  "<cmd>Telescope live_grep<cr>")
-vim.keymap.set("n", "<leader>b",  "<cmd>Telescope buffers<cr>")
-vim.keymap.set("n", "<leader>h",  "<cmd>Telescope help_tags<cr>")
+vim.keymap.set("n", "<leader>ff",  "<cmd>Telescope find_files<cr>")
+vim.keymap.set("n", "<leader>fg",  "<cmd>Telescope live_grep<cr>")
+vim.keymap.set("n", "<leader>fb",  "<cmd>Telescope buffers<cr>")
+vim.keymap.set("n", "<leader>fh",  "<cmd>Telescope help_tags<cr>")
 
 
 
