@@ -9,7 +9,7 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NVIM_TARGET="$HOME/.config/nvim"
 NEOVIDE_TARGET="$HOME/.config/neovide"
 
-copy_config() {
+create_symlink() {
     local source="$1"
     local target="$2"
     local name="$3"
@@ -27,14 +27,19 @@ copy_config() {
     fi
 
     mkdir -p "$(dirname "$target")"
-    cp -r "$source" "$target"
-    echo "  Copied: $source -> $target"
+
+    if ln -s "$source" "$target"; then
+        echo "  Created: $target -> $source"
+    else
+        echo "  Failed to create symlink for $name"
+        exit 1
+    fi
 }
 
 echo ""
-echo "Copying configurations..."
-copy_config "$DOTFILES_DIR/.config/nvim" "$NVIM_TARGET" "Neovim"
-copy_config "$DOTFILES_DIR/.config/neovide" "$NEOVIDE_TARGET" "Neovide"
+echo "Creating symlinks..."
+create_symlink "$DOTFILES_DIR/.config/nvim" "$NVIM_TARGET" "Neovim"
+create_symlink "$DOTFILES_DIR/.config/neovide" "$NEOVIDE_TARGET" "Neovide"
 
 echo ""
 echo "Configuring PATH..."

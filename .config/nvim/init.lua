@@ -1,14 +1,24 @@
+-- Leader must be set before lazy loading plugins
+vim.g.mapleader = ' '
+vim.g.maplocalleader = ' '
+
+-- Load plugins after runtimepath is set
+vim.cmd('packloadall')
+
 require('leap').set_default_mappings()
 require("telescope").setup({
   defaults = {
     mappings = { i = { ["<Esc>"] = require("telescope.actions").close } },
+    file_ignore_patterns = {},
+    hidden = true,
+  },
+  pickers = {
+    find_files = {
+      hidden = true,
+    },
   },
 })
 require("auto-save").setup()
-
--- Leader
-vim.g.mapleader = ' '
-vim.g.maplocalleader = ' '
 
 -- Some basic quality of life items
 vim.opt.number = true 		-- Show line numbers

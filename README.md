@@ -20,4 +20,6 @@ Configuration files for development environments.
 ./setup.sh
 ```
 
-Scripts copy configuration files to OS-specific locations and add `bin/` to PATH.
+Scripts create symlinks to OS-specific locations and add `bin/` to PATH.
+
+**Note**: Windows requires Administrator privileges to create symlinks.

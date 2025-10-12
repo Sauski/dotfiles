@@ -21,10 +21,10 @@ setup.sh          - macOS/Linux setup script
 
 ## Setup
 
-**Windows**: `.\setup.ps1` in PowerShell
+**Windows**: `.\setup.ps1` in PowerShell (requires Administrator privileges)
 **macOS/Linux**: `./setup.sh` in terminal
 
-Scripts copy configurations to OS-specific locations and add `bin/` to PATH.
+Scripts create symlinks to OS-specific locations and add `bin/` to PATH.
 
 ## Neovim Configuration
 
