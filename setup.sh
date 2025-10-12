@@ -43,7 +43,16 @@ create_symlink "$DOTFILES_DIR/.config/neovide" "$NEOVIDE_TARGET" "Neovide"
 
 echo ""
 echo "Configuring PATH..."
-BIN_DIR="$DOTFILES_DIR/bin"
+
+# Detect OS for bin directory
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    BIN_DIR="$DOTFILES_DIR/bin/macos"
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    BIN_DIR="$DOTFILES_DIR/bin/linux"
+else
+    echo "  Unsupported OS: $OSTYPE"
+    exit 1
+fi
 
 if [ -n "$ZSH_VERSION" ]; then
     SHELL_CONFIG="$HOME/.zshrc"

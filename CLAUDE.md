@@ -14,7 +14,10 @@ Dotfiles repository for managing configuration files across development environm
     init.lua      - Main config file
     pack/         - Native Vim 8+ package management (plugins in pack/plugins/start/)
   neovide/        - Neovide GUI configuration
-bin/              - Utility binaries
+bin/
+  windows/        - Windows binaries (e.g., rg.exe)
+  macos/          - macOS binaries
+  linux/          - Linux binaries
 setup.ps1         - Windows setup script
 setup.sh          - macOS/Linux setup script
 ```
@@ -24,7 +27,7 @@ setup.sh          - macOS/Linux setup script
 **Windows**: `.\setup.ps1` in PowerShell (requires Administrator privileges)
 **macOS/Linux**: `./setup.sh` in terminal
 
-Scripts create symlinks to OS-specific locations and add `bin/` to PATH.
+Scripts create symlinks to OS-specific locations and add OS-specific `bin/` subdirectory to PATH.
 
 ## Neovim Configuration
 

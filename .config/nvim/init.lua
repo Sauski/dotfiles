@@ -6,15 +6,28 @@ vim.g.maplocalleader = ' '
 vim.cmd('packloadall')
 
 require('leap').set_default_mappings()
+-- Telescope configuration
+-- Patterns to ignore when finding files (ripgrep glob syntax)
+local telescope_ignore_globs = {
+  "!.git",        -- Exclude .git directory
+}
+
+-- Build ripgrep command with ignore patterns
+local rg_command = { "rg", "--files", "--hidden" }
+for _, pattern in ipairs(telescope_ignore_globs) do
+  table.insert(rg_command, "--glob=" .. pattern)
+end
+
 require("telescope").setup({
   defaults = {
-    mappings = { i = { ["<Esc>"] = require("telescope.actions").close } },
-    file_ignore_patterns = {},
-    hidden = true,
+    mappings = {
+      i = { ["<Esc>"] = require("telescope.actions").close },
+    },
   },
   pickers = {
     find_files = {
       hidden = true,
+      find_command = rg_command,
     },
   },
 })
@@ -38,6 +51,4 @@ vim.keymap.set("n", "<leader>f",  "<cmd>Telescope find_files<cr>")
 vim.keymap.set("n", "<leader>g",  "<cmd>Telescope live_grep<cr>")
 vim.keymap.set("n", "<leader>b",  "<cmd>Telescope buffers<cr>")
 vim.keymap.set("n", "<leader>h",  "<cmd>Telescope help_tags<cr>")
-
-
 

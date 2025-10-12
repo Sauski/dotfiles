@@ -73,7 +73,7 @@ Create-Symlink -Source "$DOTFILES_DIR\.config\nvim" -Target $NVIM_TARGET -Name "
 Create-Symlink -Source "$DOTFILES_DIR\.config\neovide" -Target $NEOVIDE_TARGET -Name "Neovide"
 
 Write-Host "`nConfiguring PATH..." -ForegroundColor Cyan
-$binDir = "$DOTFILES_DIR\bin"
+$binDir = "$DOTFILES_DIR\bin\windows"
 
 # Get user's PATH (not admin's PATH)
 if ($OriginalUser) {
