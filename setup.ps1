@@ -29,11 +29,13 @@ if ($OriginalDotfilesDir) {
     $DOTFILES_DIR = $OriginalDotfilesDir
     $NVIM_TARGET = "$OriginalLocalAppData\nvim"
     $NEOVIDE_TARGET = "$OriginalAppData\neovide"
+    $CLAUDE_TARGET = "$OriginalLocalAppData\.claude"
     Write-Host "Running as administrator for user: $OriginalUser" -ForegroundColor Cyan
 } else {
     $DOTFILES_DIR = $PSScriptRoot
     $NVIM_TARGET = "$env:LOCALAPPDATA\nvim"
     $NEOVIDE_TARGET = "$env:APPDATA\neovide"
+    $CLAUDE_TARGET = "$env:LOCALAPPDATA\.claude"
 }
 
 function Create-Symlink {
@@ -71,6 +73,7 @@ function Create-Symlink {
 Write-Host "`nCreating symlinks..." -ForegroundColor Cyan
 Create-Symlink -Source "$DOTFILES_DIR\.config\nvim" -Target $NVIM_TARGET -Name "Neovim"
 Create-Symlink -Source "$DOTFILES_DIR\.config\neovide" -Target $NEOVIDE_TARGET -Name "Neovide"
+Create-Symlink -Source "$DOTFILES_DIR\.claude" -Target $CLAUDE_TARGET -Name "Claude Code"
 
 Write-Host "`nConfiguring PATH..." -ForegroundColor Cyan
 $binDir = "$DOTFILES_DIR\bin\windows"

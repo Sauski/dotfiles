@@ -8,6 +8,7 @@ echo "Setting up dotfiles..."
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NVIM_TARGET="$HOME/.config/nvim"
 NEOVIDE_TARGET="$HOME/.config/neovide"
+CLAUDE_TARGET="$HOME/.claude"
 
 create_symlink() {
     local source="$1"
@@ -40,6 +41,7 @@ echo ""
 echo "Creating symlinks..."
 create_symlink "$DOTFILES_DIR/.config/nvim" "$NVIM_TARGET" "Neovim"
 create_symlink "$DOTFILES_DIR/.config/neovide" "$NEOVIDE_TARGET" "Neovide"
+create_symlink "$DOTFILES_DIR/.claude" "$CLAUDE_TARGET" "Claude Code"
 
 echo ""
 echo "Configuring PATH..."

@@ -14,6 +14,8 @@ Dotfiles repository for managing configuration files across development environm
     init.lua      - Main config file
     pack/         - Native Vim 8+ package management (plugins in pack/plugins/start/)
   neovide/        - Neovide GUI configuration
+.claude/
+  claude.md       - Claude Code configuration (symlinked to user directory)
 bin/
   windows/        - Windows binaries (e.g., rg.exe)
   macos/          - macOS binaries
