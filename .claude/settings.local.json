@@ -3,7 +3,8 @@
     "allow": [
       "Bash(git clone:*)",
       "WebSearch",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []
