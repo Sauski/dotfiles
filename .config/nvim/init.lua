@@ -6,6 +6,19 @@ vim.g.maplocalleader = ' '
 vim.cmd('packloadall')
 
 require('leap').set_default_mappings()
+
+require("nvim-treesitter.install").compilers = { "clang" }
+
+-- Treesitter configuration
+require('nvim-treesitter.configs').setup({
+  highlight = {
+    enable = true,
+  },
+  indent = {
+    enable = true,
+  },
+})
+
 -- Telescope configuration
 -- Patterns to ignore when finding files (ripgrep glob syntax)
 local telescope_ignore_globs = {
@@ -38,7 +51,16 @@ vim.opt.number = true 		-- Show line numbers
 vim.opt.ignorecase = true	-- Ignore case ...
 vim.opt.smartcase = true	-- ... unless specified
 vim.opt.termguicolors = true	-- 24bit color
-vim.opt.mouse = 'a'		-- Mouse in all modes 
+vim.opt.mouse = 'a'		-- Mouse in all modes
+
+-- Gruvbox Material colorscheme
+vim.opt.background = 'dark'
+vim.g.gruvbox_material_background = 'medium'  -- Options: 'soft', 'medium', 'hard'
+vim.g.gruvbox_material_better_performance = 1
+vim.cmd('colorscheme gruvbox-material')
+
+-- Override tree-sitter highlighting for built-in types
+vim.api.nvim_set_hl(0, "@type.builtin", { fg = "#e78a4e" })  -- Orange (int, string, bool) - distinguishable from yellow 
 
 -- Spaces over Tabs
 vim.opt.tabstop = 2
