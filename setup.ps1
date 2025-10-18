@@ -29,13 +29,13 @@ if ($OriginalDotfilesDir) {
     $DOTFILES_DIR = $OriginalDotfilesDir
     $NVIM_TARGET = "$OriginalLocalAppData\nvim"
     $NEOVIDE_TARGET = "$OriginalAppData\neovide"
-    $CLAUDE_TARGET = "$OriginalLocalAppData\.claude"
+    $CLAUDE_TARGET = "$env:USERPROFILE\.claude"
     Write-Host "Running as administrator for user: $OriginalUser" -ForegroundColor Cyan
 } else {
     $DOTFILES_DIR = $PSScriptRoot
     $NVIM_TARGET = "$env:LOCALAPPDATA\nvim"
     $NEOVIDE_TARGET = "$env:APPDATA\neovide"
-    $CLAUDE_TARGET = "$env:LOCALAPPDATA\.claude"
+    $CLAUDE_TARGET = "$env:USERPROFILE\.claude"
 }
 
 function Create-Symlink {

@@ -44,7 +44,10 @@ require("telescope").setup({
     },
   },
 })
-require("auto-save").setup()
+require("auto-save").setup({
+  verbose = true,
+})
+require("quickbuild").setup()
 
 -- Some basic quality of life items
 vim.opt.number = true 		-- Show line numbers
@@ -52,6 +55,17 @@ vim.opt.ignorecase = true	-- Ignore case ...
 vim.opt.smartcase = true	-- ... unless specified
 vim.opt.termguicolors = true	-- 24bit color
 vim.opt.mouse = 'a'		-- Mouse in all modes
+
+-- Backup and temp files in home directory
+local cache_dir = vim.fn.stdpath('cache')
+vim.opt.backup = true
+vim.opt.backupdir = cache_dir .. '/backup//'
+vim.opt.directory = cache_dir .. '/swap//'
+vim.opt.undofile = true
+vim.opt.undodir = cache_dir .. '/undo//'
+vim.fn.mkdir(vim.fn.stdpath('cache') .. '/backup', 'p')
+vim.fn.mkdir(vim.fn.stdpath('cache') .. '/swap', 'p')
+vim.fn.mkdir(vim.fn.stdpath('cache') .. '/undo', 'p')
 
 -- Gruvbox Material colorscheme
 vim.opt.background = 'dark'
@@ -73,6 +87,16 @@ vim.keymap.set("n", "<leader>f",  "<cmd>Telescope find_files<cr>")
 vim.keymap.set("n", "<leader>g",  "<cmd>Telescope live_grep<cr>")
 vim.keymap.set("n", "<leader>b",  "<cmd>Telescope buffers<cr>")
 vim.keymap.set("n", "<leader>h",  "<cmd>Telescope help_tags<cr>")
+vim.keymap.set("n", "<leader>e",  "<cmd>Telescope diagnostics<cr>")
+
+-- QuickBuild keybinds
+vim.keymap.set("n", "<leader>bb", "<cmd>QuickBuild<cr>")
+vim.keymap.set("n", "<leader>bc", "<cmd>QuickBuildCancel<cr>")
+
+-- Diagnostic navigation
+vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
+vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
+vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float)
 
 -- Split navigation (work in all modes)
 vim.keymap.set({'n', 'i', 'v', 't'}, '<C-]>', '<Esc><C-w>w', { noremap = true, silent = true })  -- Cycle forward (Ctrl+])

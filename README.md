@@ -2,24 +2,44 @@
 
 Configuration files for development environments.
 
-## Contents
+## Directory Structure
 
-- **Neovim**: Editor configuration with plugins and keybindings
-- **Neovide**: Neovim GUI configuration
-- **Utilities**: Development tools (ripgrep)
+```
+.config/
+  nvim/           - Neovim configuration
+    init.lua      - Main config file
+    pack/         - Native Vim 8+ package management (plugins in pack/plugins/start/)
+  neovide/        - Neovide GUI configuration
+.claude/
+  CLAUDE.md       - Claude Code configuration (symlinked to ~/.claude/)
+bin/
+  windows/        - Windows binaries (e.g., rg.exe)
+  macos/          - macOS binaries
+  linux/          - Linux binaries
+setup.ps1         - Windows setup script
+setup.sh          - macOS/Linux setup script
+```
 
 ## Setup
 
-**Windows:**
-```powershell
-.\setup.ps1
-```
+**Windows**: `.\setup.ps1` in PowerShell (requires Administrator privileges)
+**macOS/Linux**: `./setup.sh` in terminal
 
-**macOS/Linux:**
-```bash
-./setup.sh
-```
+Scripts create symlinks to OS-specific locations and add OS-specific `bin/` subdirectory to PATH.
 
-Scripts create symlinks to OS-specific locations and add `bin/` to PATH.
+## Neovim Configuration
 
-**Note**: Windows requires Administrator privileges to create symlinks.
+- **Plugin Management**: Native Vim 8+ package management
+- **Leader Key**: Space
+- **Tab Settings**: 2 spaces, expanded tabs
+- **Plugins**: leap.nvim, telescope.nvim, auto-save.nvim
+
+**Telescope Keybindings**:
+- `<leader>f` - Find files
+- `<leader>g` - Live grep
+- `<leader>b` - Buffers
+- `<leader>h` - Help tags
+
+## Adding Plugins
+
+Clone into `.config/nvim/pack/plugins/start/` and add setup call in `init.lua` if needed.
