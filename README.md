@@ -42,13 +42,36 @@ Hard links ensure Claude Code config is tracked in git while operational data (h
 - **Plugin Management**: Native Vim 8+ package management
 - **Leader Key**: Space
 - **Tab Settings**: 2 spaces, expanded tabs
-- **Plugins**: leap.nvim, telescope.nvim, auto-save.nvim
 
-**Telescope Keybindings**:
+### Plugins
+
+**leap.nvim** - Motion plugin for jumping to any location
+- `s` - Jump anywhere (all windows)
+- `S` - Jump in current window only
+
+**telescope.nvim** - Fuzzy finder
 - `<leader>f` - Find files
 - `<leader>g` - Live grep
 - `<leader>b` - Buffers
 - `<leader>h` - Help tags
+- `<leader>e` - Diagnostics
+
+**nvim-treesitter** - Syntax highlighting and code parsing
+
+**auto-save.nvim** - Automatically saves files on buffer changes
+
+**auto-session** - Automatic session persistence per directory
+- Sessions saved to `~/.local/share/nvim/sessions/`
+- Session created per working directory (cwd)
+- **Important**: Opening nvim with file arguments (e.g., clicking a file in Windows) prevents session creation/restore. Open nvim without args to use sessions.
+- `<leader>s` - Search and switch sessions
+
+**quickbuild** - Build automation
+- `<leader>bb` - Run build
+- `<leader>bc` - Cancel build
+
+**clang-format** - C/C++ code formatting (Chromium style)
+- `<leader>w` - Format and save
 
 ## Adding Plugins
 

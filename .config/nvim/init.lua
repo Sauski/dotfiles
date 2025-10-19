@@ -67,6 +67,8 @@ vim.opt.ignorecase = true	-- Ignore case ...
 vim.opt.smartcase = true	-- ... unless specified
 vim.opt.termguicolors = true	-- 24bit color
 vim.opt.mouse = 'a'		-- Mouse in all modes
+vim.opt.fillchars:append({ eob = " ", vert = " " })  -- Hide tildes and buffer dividers
+vim.opt.signcolumn = "yes:1"	-- Always show 1-char sign column
 
 -- Backup and temp files in home directory
 local cache_dir = vim.fn.stdpath('cache')
