@@ -120,9 +120,28 @@ vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float)
 vim.g.neovide_scroll_animation_length = 0.18
 vim.g.neovide_cursor_animation_length = 0.10
 
--- Fast cursor-fixed scrolling (15 lines at a time)
-vim.keymap.set('n', '<C-d>', '15<C-e>', { noremap = true, silent = true })
-vim.keymap.set('n', '<C-u>', '15<C-y>', { noremap = true, silent = true })
+-- Smart scrolling that prevents scrolling into empty space
+local function smart_scroll(direction, amount)
+  local win_height = vim.api.nvim_win_get_height(0)
+  local total_lines = vim.api.nvim_buf_line_count(0)
+  local top_line = vim.fn.line('w0')
+
+  if direction == 'down' then
+    local max_top = math.max(1, total_lines - win_height + 1)
+    if top_line < max_top then
+      local scroll_amount = math.min(amount, max_top - top_line)
+      vim.cmd('normal! ' .. scroll_amount .. '\x05')
+    end
+  else
+    if top_line > 1 then
+      local scroll_amount = math.min(amount, top_line - 1)
+      vim.cmd('normal! ' .. scroll_amount .. '\x19')
+    end
+  end
+end
+
+vim.keymap.set('n', '<C-d>', function() smart_scroll('down', 15) end, { noremap = true, silent = true })
+vim.keymap.set('n', '<C-u>', function() smart_scroll('up', 15) end, { noremap = true, silent = true })
 
 -- Don't auto-equalize splits on open/close
 vim.opt.equalalways = false

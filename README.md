@@ -80,9 +80,9 @@ Hard links ensure Claude Code config is tracked in git while operational data (h
 - `[d` - Previous diagnostic
 - `<leader>d` - Show diagnostic float
 
-**Scrolling**
-- `Ctrl+d` - Scroll down (cursor stays fixed)
-- `Ctrl+u` - Scroll up (cursor stays fixed)
+**Scrolling** (prevents scrolling into empty space)
+- `Ctrl+d` - Scroll down 15 lines
+- `Ctrl+u` - Scroll up 15 lines
 
 **Split Window Management** (splits don't auto-equalize)
 - `Alt+]` - Cycle forward through splits
