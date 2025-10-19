@@ -5,7 +5,9 @@ vim.g.maplocalleader = ' '
 -- Load plugins after runtimepath is set
 vim.cmd('packloadall')
 
-require('leap').set_default_mappings()
+-- Leap configuration - swap default mappings
+vim.keymap.set({'n', 'x', 'o'}, 's', '<Plug>(leap-anywhere)')  -- All windows (including current)
+vim.keymap.set('n', 'S', '<Plug>(leap)')  -- Current window only
 
 require("nvim-treesitter.install").compilers = { "clang" }
 
