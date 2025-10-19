@@ -121,27 +121,18 @@ vim.g.neovide_scroll_animation_length = 0.18
 vim.g.neovide_cursor_animation_length = 0.10
 
 -- Smart scrolling that prevents scrolling into empty space
-local function smart_scroll(direction, amount)
-  local win_height = vim.api.nvim_win_get_height(0)
-  local total_lines = vim.api.nvim_buf_line_count(0)
-  local top_line = vim.fn.line('w0')
-
-  if direction == 'down' then
-    local max_top = math.max(1, total_lines - win_height + 1)
-    if top_line < max_top then
-      local scroll_amount = math.min(amount, max_top - top_line)
-      vim.cmd('normal! ' .. scroll_amount .. '\x05')
-    end
-  else
-    if top_line > 1 then
-      local scroll_amount = math.min(amount, top_line - 1)
-      vim.cmd('normal! ' .. scroll_amount .. '\x19')
-    end
-  end
+local function scroll_down()
+  local amount = math.min(15, vim.api.nvim_buf_line_count(0) - vim.api.nvim_win_get_height(0) + 1 - vim.fn.line('w0'))
+  if amount > 0 then vim.cmd('normal! ' .. amount .. '\x05') end
 end
 
-vim.keymap.set('n', '<C-d>', function() smart_scroll('down', 15) end, { noremap = true, silent = true })
-vim.keymap.set('n', '<C-u>', function() smart_scroll('up', 15) end, { noremap = true, silent = true })
+local function scroll_up()
+  local amount = math.min(15, vim.fn.line('w0') - 1)
+  if amount > 0 then vim.cmd('normal! ' .. amount .. '\x19') end
+end
+
+vim.keymap.set('n', '<C-d>', scroll_down, { noremap = true, silent = true })
+vim.keymap.set('n', '<C-u>', scroll_up, { noremap = true, silent = true })
 
 -- Don't auto-equalize splits on open/close
 vim.opt.equalalways = false
