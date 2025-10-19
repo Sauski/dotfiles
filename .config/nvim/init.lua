@@ -114,6 +114,14 @@ vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
 vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
 vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float)
 
+-- Neovide animation speed
+vim.g.neovide_scroll_animation_length = 0.18
+vim.g.neovide_cursor_animation_length = 0.10
+
+-- Fast cursor-fixed scrolling (15 lines at a time)
+vim.keymap.set('n', '<C-d>', '15<C-e>', { noremap = true, silent = true })
+vim.keymap.set('n', '<C-u>', '15<C-y>', { noremap = true, silent = true })
+
 -- Split navigation (work in all modes)
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-]>', '<Esc><C-w>w', { noremap = true, silent = true })  -- Cycle forward (Alt+])
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-[>', '<Esc><C-w>W', { noremap = true, silent = true })  -- Cycle backward (Alt+[)
