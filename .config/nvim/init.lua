@@ -50,7 +50,7 @@ require("auto-save").setup({
   verbose = true,
 })
 require("quickbuild").setup()
-vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"  -- Recommended by auto-session
 require("auto-session").setup({
   auto_save = true,
   auto_restore = true,
