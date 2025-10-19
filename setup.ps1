@@ -4,7 +4,8 @@ param(
     [string]$OriginalUser,
     [string]$OriginalLocalAppData,
     [string]$OriginalAppData,
-    [string]$OriginalDotfilesDir
+    [string]$OriginalDotfilesDir,
+    [string]$OriginalUserProfile
 )
 
 # Check if running as administrator
@@ -17,8 +18,9 @@ if (-not $isAdmin) {
     $currentLocalAppData = $env:LOCALAPPDATA
     $currentAppData = $env:APPDATA
     $currentDotfilesDir = $PSScriptRoot
+    $currentUserProfile = $env:USERPROFILE
 
-    Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -OriginalUser `"$currentUser`" -OriginalLocalAppData `"$currentLocalAppData`" -OriginalAppData `"$currentAppData`" -OriginalDotfilesDir `"$currentDotfilesDir`""
+    Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -OriginalUser `"$currentUser`" -OriginalLocalAppData `"$currentLocalAppData`" -OriginalAppData `"$currentAppData`" -OriginalDotfilesDir `"$currentDotfilesDir`" -OriginalUserProfile `"$currentUserProfile`""
     exit
 }
 
@@ -29,7 +31,7 @@ if ($OriginalDotfilesDir) {
     $DOTFILES_DIR = $OriginalDotfilesDir
     $NVIM_TARGET = "$OriginalLocalAppData\nvim"
     $NEOVIDE_TARGET = "$OriginalAppData\neovide"
-    $CLAUDE_TARGET = "$env:USERPROFILE\.claude"
+    $CLAUDE_TARGET = "$OriginalUserProfile\.claude"
     Write-Host "Running as administrator for user: $OriginalUser" -ForegroundColor Cyan
 } else {
     $DOTFILES_DIR = $PSScriptRoot
@@ -70,10 +72,44 @@ function Create-Symlink {
     }
 }
 
+function Create-HardLink {
+    param (
+        [string]$Source,
+        [string]$Target,
+        [string]$Name
+    )
+
+    if (Test-Path $Target) {
+        Write-Host "  $Name exists at $Target" -ForegroundColor Yellow
+        $response = Read-Host "  Replace? (y/n)"
+        if ($response -eq 'y') {
+            Remove-Item -Path $Target -Force
+        } else {
+            Write-Host "  Skipping $Name" -ForegroundColor Yellow
+            return
+        }
+    }
+
+    try {
+        New-Item -ItemType HardLink -Path $Target -Target $Source -Force | Out-Null
+        Write-Host "  Created: $Target -> $Source" -ForegroundColor Green
+    } catch {
+        Write-Host "  Failed to create hard link for $Name" -ForegroundColor Red
+        Write-Host "  Error: $_" -ForegroundColor Red
+    }
+}
+
 Write-Host "`nCreating symlinks..." -ForegroundColor Cyan
 Create-Symlink -Source "$DOTFILES_DIR\.config\nvim" -Target $NVIM_TARGET -Name "Neovim"
 Create-Symlink -Source "$DOTFILES_DIR\.config\neovide" -Target $NEOVIDE_TARGET -Name "Neovide"
-Create-Symlink -Source "$DOTFILES_DIR\.claude" -Target $CLAUDE_TARGET -Name "Claude Code"
+
+Write-Host "`nSetting up Claude Code config..." -ForegroundColor Cyan
+if (-not (Test-Path $CLAUDE_TARGET)) {
+    New-Item -ItemType Directory -Path $CLAUDE_TARGET -Force | Out-Null
+    Write-Host "  Created Claude directory: $CLAUDE_TARGET" -ForegroundColor Green
+}
+Create-HardLink -Source "$DOTFILES_DIR\claude-config\CLAUDE.md" -Target "$CLAUDE_TARGET\CLAUDE.md" -Name "CLAUDE.md"
+Create-HardLink -Source "$DOTFILES_DIR\claude-config\settings.local.json" -Target "$CLAUDE_TARGET\settings.local.json" -Name "settings.local.json"
 
 Write-Host "`nConfiguring PATH..." -ForegroundColor Cyan
 $binDir = "$DOTFILES_DIR\bin\windows"
