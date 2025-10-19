@@ -49,6 +49,10 @@ require("auto-save").setup({
 })
 require("quickbuild").setup()
 
+-- Clang-format configuration
+vim.g['clang_format#code_style'] = 'chromium'
+vim.g['clang_format#auto_format'] = 0
+
 -- Some basic quality of life items
 vim.opt.number = true 		-- Show line numbers
 vim.opt.ignorecase = true	-- Ignore case ...
@@ -89,6 +93,9 @@ vim.keymap.set("n", "<leader>b",  "<cmd>Telescope buffers<cr>")
 vim.keymap.set("n", "<leader>h",  "<cmd>Telescope help_tags<cr>")
 vim.keymap.set("n", "<leader>e",  "<cmd>Telescope diagnostics<cr>")
 
+-- Format and save
+vim.keymap.set("n", "<leader>w",  "<cmd>ClangFormat<cr><cmd>write<cr>")
+
 -- QuickBuild keybinds
 vim.keymap.set("n", "<leader>bb", "<cmd>QuickBuild<cr>")
 vim.keymap.set("n", "<leader>bc", "<cmd>QuickBuildCancel<cr>")
@@ -99,8 +106,8 @@ vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
 vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float)
 
 -- Split navigation (work in all modes)
-vim.keymap.set({'n', 'i', 'v', 't'}, '<C-]>', '<Esc><C-w>w', { noremap = true, silent = true })  -- Cycle forward (Ctrl+])
-vim.keymap.set({'n', 'i', 'v', 't'}, '<C-[>', '<Esc><C-w>W', { noremap = true, silent = true })  -- Cycle backward (Ctrl+[)
+vim.keymap.set({'n', 'i', 'v', 't'}, '<M-]>', '<Esc><C-w>w', { noremap = true, silent = true })  -- Cycle forward (Alt+])
+vim.keymap.set({'n', 'i', 'v', 't'}, '<M-[>', '<Esc><C-w>W', { noremap = true, silent = true })  -- Cycle backward (Alt+[)
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-{>', '<Esc><C-w>c', { noremap = true, silent = true })  -- Close split (Alt+{)
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-}>', '<Esc><C-w>=', { noremap = true, silent = true })  -- Equalize splits (Alt+})
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-C-PageUp>', '<Esc><cmd>vsplit<cr>', { noremap = true, silent = true })  -- Vertical split
