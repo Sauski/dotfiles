@@ -37,11 +37,44 @@ create_symlink() {
     fi
 }
 
+create_hardlink() {
+    local source="$1"
+    local target="$2"
+    local name="$3"
+
+    if [ -e "$target" ] || [ -L "$target" ]; then
+        echo "  $name exists at $target"
+        read -p "  Replace? (y/n) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            rm -f "$target"
+        else
+            echo "  Skipping $name"
+            return
+        fi
+    fi
+
+    if ln "$source" "$target"; then
+        echo "  Created: $target -> $source"
+    else
+        echo "  Failed to create hard link for $name"
+        exit 1
+    fi
+}
+
 echo ""
 echo "Creating symlinks..."
 create_symlink "$DOTFILES_DIR/.config/nvim" "$NVIM_TARGET" "Neovim"
 create_symlink "$DOTFILES_DIR/.config/neovide" "$NEOVIDE_TARGET" "Neovide"
-create_symlink "$DOTFILES_DIR/.claude" "$CLAUDE_TARGET" "Claude Code"
+
+echo ""
+echo "Setting up Claude Code config..."
+if [ ! -d "$CLAUDE_TARGET" ]; then
+    mkdir -p "$CLAUDE_TARGET"
+    echo "  Created Claude directory: $CLAUDE_TARGET"
+fi
+create_hardlink "$DOTFILES_DIR/claude-config/CLAUDE.md" "$CLAUDE_TARGET/CLAUDE.md" "CLAUDE.md"
+create_hardlink "$DOTFILES_DIR/claude-config/settings.local.json" "$CLAUDE_TARGET/settings.local.json" "settings.local.json"
 
 echo ""
 echo "Configuring PATH..."

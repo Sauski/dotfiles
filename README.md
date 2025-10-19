@@ -10,8 +10,9 @@ Configuration files for development environments.
     init.lua      - Main config file
     pack/         - Native Vim 8+ package management (plugins in pack/plugins/start/)
   neovide/        - Neovide GUI configuration
-.claude/
-  CLAUDE.md       - Claude Code configuration (symlinked to ~/.claude/)
+claude-config/
+  CLAUDE.md       - Claude Code global instructions
+  settings.local.json - Claude Code settings
 bin/
   windows/        - Windows binaries (e.g., rg.exe)
   macos/          - macOS binaries
@@ -25,7 +26,16 @@ setup.sh          - macOS/Linux setup script
 **Windows**: `.\setup.ps1` in PowerShell (requires Administrator privileges)
 **macOS/Linux**: `./setup.sh` in terminal
 
-Scripts create symlinks to OS-specific locations and add OS-specific `bin/` subdirectory to PATH.
+Scripts create symlinks for config directories and hard links for Claude Code config files to OS-specific locations. Adds OS-specific `bin/` subdirectory to PATH.
+
+### What Gets Linked
+
+- **Neovim**: `.config/nvim` → `~/.config/nvim` (symlink)
+- **Neovide**: `.config/neovide` → `~/.config/neovide` (Windows) or `~/.config/neovide` (macOS/Linux) (symlink)
+- **Claude Code**: `claude-config/CLAUDE.md` → `~/.claude/CLAUDE.md` (hard link)
+- **Claude Code**: `claude-config/settings.local.json` → `~/.claude/settings.local.json` (hard link)
+
+Hard links ensure Claude Code config is tracked in git while operational data (history, debug logs) stays local.
 
 ## Neovim Configuration
 
