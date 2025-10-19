@@ -73,6 +73,27 @@ Hard links ensure Claude Code config is tracked in git while operational data (h
 **clang-format** - C/C++ code formatting (Chromium style)
 - `<leader>w` - Format and save
 
+### Editor Features
+
+**Diagnostics**
+- `]d` - Next diagnostic
+- `[d` - Previous diagnostic
+- `<leader>d` - Show diagnostic float
+
+**Scrolling**
+- `Ctrl+d` - Scroll down (cursor stays fixed)
+- `Ctrl+u` - Scroll up (cursor stays fixed)
+
+**Split Window Management** (splits don't auto-equalize)
+- `Alt+]` - Cycle forward through splits
+- `Alt+[` - Cycle backward through splits
+- `Alt+{` - Close current split
+- `Alt+}` - Equalize all splits
+- `Alt+Ctrl+PageUp` - Create vertical split
+- `Alt+Ctrl+PageDown` - Create horizontal split
+- `Alt+(` - Decrease split width
+- `Alt+)` - Increase split width
+
 ## Adding Plugins
 
 Clone into `.config/nvim/pack/plugins/start/` and add setup call in `init.lua` if needed.

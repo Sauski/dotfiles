@@ -124,11 +124,16 @@ vim.g.neovide_cursor_animation_length = 0.10
 vim.keymap.set('n', '<C-d>', '15<C-e>', { noremap = true, silent = true })
 vim.keymap.set('n', '<C-u>', '15<C-y>', { noremap = true, silent = true })
 
--- Split navigation (work in all modes)
+-- Don't auto-equalize splits on open/close
+vim.opt.equalalways = false
+
+-- Split navigation and management (work in all modes)
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-]>', '<Esc><C-w>w', { noremap = true, silent = true })  -- Cycle forward (Alt+])
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-[>', '<Esc><C-w>W', { noremap = true, silent = true })  -- Cycle backward (Alt+[)
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-{>', '<Esc><C-w>c', { noremap = true, silent = true })  -- Close split (Alt+{)
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-}>', '<Esc><C-w>=', { noremap = true, silent = true })  -- Equalize splits (Alt+})
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-C-PageUp>', '<Esc><cmd>vsplit<cr>', { noremap = true, silent = true })  -- Vertical split
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-C-PageDown>', '<Esc><cmd>split<cr>', { noremap = true, silent = true })  -- Horizontal split
+vim.keymap.set({'n', 'i', 'v', 't'}, '<M-(>', '<Esc><C-w>5<', { noremap = true, silent = true })  -- Decrease width (Alt+()
+vim.keymap.set({'n', 'i', 'v', 't'}, '<M-)>', '<Esc><C-w>5>', { noremap = true, silent = true })  -- Increase width (Alt+))
 
