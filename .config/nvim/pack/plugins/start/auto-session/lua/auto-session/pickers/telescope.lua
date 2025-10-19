@@ -1,0 +1,155 @@
+local Config = require("auto-session.config")
+local Lib = require("auto-session.lib")
+local AutoSession = require("auto-session")
+
+local function is_available()
+  -- don't just want to see if the telescope files are there,
+  -- want to make sure it's loaded/configured
+  if vim.fn.exists(":Telescope") ~= 2 then
+    return false
+  end
+
+  local ok, telescope = pcall(require, "telescope")
+  if not ok or not telescope then
+    return false
+  end
+
+  local result
+
+  ok, result = pcall(telescope.load_extension, "session-lens")
+  return ok and result
+end
+
+local function open_session_picker()
+  return vim.cmd("Telescope session-lens")
+end
+
+---@private
+---Search session
+---Triggers the customized telescope picker for switching sessions
+---@param custom_opts table
+local function extension_search_session(custom_opts)
+  local telescope_themes = require("telescope.themes")
+  local telescope_actions = require("telescope.actions")
+  local telescope_finders = require("telescope.finders")
+  local telescope_conf = require("telescope.config").values
+
+  -- use custom_opts if specified and non-empty. Otherwise use the config
+  if not custom_opts or vim.tbl_isempty(custom_opts) then
+    custom_opts = Config.session_lens
+  end
+  custom_opts = custom_opts or {}
+
+  if not custom_opts.picker_opts then
+    -- If there are no picker options, default to previewer off
+    custom_opts.picker_opts = { previewer = false }
+  elseif custom_opts.picker_opts.previewer == nil then
+    -- If there are picker options but previewer wasn't explicitly set on,
+    -- default it to off
+    custom_opts.picker_opts.previewer = false
+  end
+
+  local theme_opts
+  if custom_opts.picker_opts.theme and telescope_themes["get_" .. custom_opts.picker_opts.theme] then
+    local theme = "get_" .. custom_opts.picker_opts.theme
+    theme_opts = telescope_themes[theme](custom_opts.picker_opts)
+  else
+    -- get the theme defaults, with any overrides in custom_opts.picker_opts
+    theme_opts = telescope_themes.get_dropdown(custom_opts.picker_opts)
+  end
+
+  if theme_opts.path_display then
+    -- If there's a path_display setting, we have to force path_display.absolute = true here,
+    -- otherwise the session for the cwd will be displayed as just a dot
+    theme_opts.path_display.absolute = true
+  end
+
+  local session_root_dir = AutoSession.get_root_dir()
+
+  local session_entry_maker = function(session_entry)
+    return {
+
+      ordinal = session_entry.session_name,
+      value = session_entry.session_name,
+      session_name = session_entry.session_name,
+      filename = session_entry.file_name,
+      path = session_entry.path,
+      cwd = session_root_dir,
+
+      -- We can't calculate the value of display until the picker is actually displayed
+      -- because telescope.utils.transform_path may depend on the window size,
+      -- specifically with the truncate option. So we use a function that will be
+      -- called when actually displaying the row
+      display = function(_)
+        if session_entry.already_set_display_name then
+          return session_entry.display_name
+        end
+
+        session_entry.already_set_display_name = true
+
+        if not theme_opts or not theme_opts.path_display then
+          return session_entry.display_name
+        end
+
+        local telescope_utils = require("telescope.utils")
+
+        return telescope_utils.transform_path(theme_opts, session_entry.display_name_component)
+          .. session_entry.annotation_component
+      end,
+    }
+  end
+
+  local finder_maker = function()
+    return telescope_finders.new_table({
+      results = Lib.get_session_list(session_root_dir),
+      entry_maker = session_entry_maker,
+    })
+  end
+
+  local Actions = require("auto-session.pickers.telescope_actions")
+  local opts = {
+    prompt_title = "Sessions",
+    attach_mappings = function(prompt_bufnr, map)
+      telescope_actions.select_default:replace(Actions.source_session)
+
+      local mappings = Config.session_lens.mappings
+      if mappings then
+        map(mappings.delete_session[1], mappings.delete_session[2], Actions.delete_session)
+        map(mappings.alternate_session[1], mappings.alternate_session[2], Actions.alternate_session)
+
+        Actions.copy_session:enhance({
+          post = function()
+            local action_state = require("telescope.actions.state")
+            local picker = action_state.get_current_picker(prompt_bufnr)
+            picker:refresh(finder_maker(), { reset_prompt = true })
+          end,
+        })
+
+        map(mappings.copy_session[1], mappings.copy_session[2], Actions.copy_session)
+      end
+      return true
+    end,
+  }
+
+  -- add the theme options
+  opts = vim.tbl_deep_extend("force", opts, theme_opts)
+
+  require("telescope.pickers")
+    .new(opts, {
+      finder = finder_maker(),
+      previewer = telescope_conf.file_previewer(opts),
+      sorter = telescope_conf.file_sorter(opts),
+    })
+    :find()
+end
+
+---@type Picker
+local M = {
+  is_available = is_available,
+  open_session_picker = open_session_picker,
+
+  -- Used with the telescope extension
+  extension_search_session = extension_search_session,
+}
+
+return M

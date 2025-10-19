@@ -50,6 +50,12 @@ require("auto-save").setup({
   verbose = true,
 })
 require("quickbuild").setup()
+vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+require("auto-session").setup({
+  auto_save = true,
+  auto_restore = true,
+  auto_create = true,
+})
 
 -- Clang-format configuration
 vim.g['clang_format#code_style'] = 'chromium'
@@ -94,6 +100,7 @@ vim.keymap.set("n", "<leader>g",  "<cmd>Telescope live_grep<cr>")
 vim.keymap.set("n", "<leader>b",  "<cmd>Telescope buffers<cr>")
 vim.keymap.set("n", "<leader>h",  "<cmd>Telescope help_tags<cr>")
 vim.keymap.set("n", "<leader>e",  "<cmd>Telescope diagnostics<cr>")
+vim.keymap.set("n", "<leader>s",  "<cmd>AutoSession search<cr>")
 
 -- Format and save
 vim.keymap.set("n", "<leader>w",  "<cmd>ClangFormat<cr><cmd>write<cr>")
