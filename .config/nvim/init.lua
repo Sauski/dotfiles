@@ -147,3 +147,13 @@ vim.keymap.set({'n', 'i', 'v', 't'}, '<M-C-PageDown>', '<Esc><cmd>split<cr>', { 
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-(>', '<Esc><C-w>5<', { noremap = true, silent = true })  -- Decrease width (Alt+()
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-)>', '<Esc><C-w>5>', { noremap = true, silent = true })  -- Increase width (Alt+))
 
+-- OS-specific font configuration for Neovide
+if vim.fn.has("win32") == 1 then
+  -- Windows
+  vim.o.guifont = "Consolas:h14"
+else
+  -- Linux/macOS
+  vim.o.guifont = "DejaVu Sans Mono:h14"
+end
+
+

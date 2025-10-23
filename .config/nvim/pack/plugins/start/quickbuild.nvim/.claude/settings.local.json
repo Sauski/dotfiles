@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(qb-scanner:*)",
+      "Bash(cmake:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

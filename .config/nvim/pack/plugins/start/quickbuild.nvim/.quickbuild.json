@@ -1,0 +1,20 @@
+{
+  "patterns": [
+    {
+      "regex": "^(.+?):(\\d+):(\\d+): (error|warning|note): (.+)$",
+      "groups": {"file": 1, "line": 2, "col": 3, "severity": 4, "message": 5}
+    },
+    {
+      "regex": "^(.+?)\\((\\d+),(\\d+)\\): (error|warning) C\\d+: (.+)$",
+      "groups": {"file": 1, "line": 2, "col": 3, "severity": 4, "message": 5}
+    }
+  ],
+  "commands": [
+    "cmake -B scanner/build -S scanner",
+    "cmake --build scanner/build --config Release",
+    "ctest --test-dir scanner/build -C Release"
+  ],
+  "auto_build_on_save": true,
+  "file_patterns": ["*.cpp", "*.hpp", "*.c", "*.h"],
+  "debounce_ms": 500
+}

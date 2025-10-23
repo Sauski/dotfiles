@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/scanner_test.dir/link.d CMakeFiles/scanner_test.dir/test/scanner_test.cpp.o -o scanner_test  lib/libgtest.a lib/libgtest_main.a lib/libgtest.a

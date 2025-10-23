@@ -1,9 +1,2 @@
 maximized = false
 theme     = "auto"
-
-[font]
-normal = ["Consolas"]
-size   = 14
-
-[font.features]
-"Consolas" = ["-calt"]     # kill ligatures on startup
