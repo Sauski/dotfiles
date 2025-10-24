@@ -151,8 +151,11 @@ vim.keymap.set({'n', 'i', 'v', 't'}, '<M-)>', '<Esc><C-w>5>', { noremap = true, 
 if vim.fn.has("win32") == 1 then
   -- Windows
   vim.o.guifont = "Consolas:h14"
+elseif vim.fn.has("macunix") == 1 then
+  -- macOS
+  vim.o.guifont = "Menlo:h14"
 else
-  -- Linux/macOS
+  -- Linux
   vim.o.guifont = "DejaVu Sans Mono:h14"
 end
 
