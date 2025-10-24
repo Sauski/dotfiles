@@ -21,92 +21,18 @@ require('nvim-treesitter.configs').setup({
   },
 })
 
--- Telescope configuration
--- Patterns to ignore when finding files
-local telescope_ignore_globs = {
-  "!.git",        -- Exclude .git directory
-
-  -- Chromium directories that we don't work in
-  "!third_party",
-}
-
--- Telescope configuration
-
--- Define glob patterns for exclusion.
--- NOTE: We just list the patterns here, not the '!' prefix.
-local exclude_patterns = {
-  ".git",
-
-  -- Chromium specific
-  "third_party",
-  "v8",
-  "out",
-  "build",
-  "sql",
-  "storage",
-  "printing",
-  "media",
-  "infra",
-  "android_webview",
-  "ash",
-  "chromecast",
-  "pdf",
-  "printing",
-}
-
----
--- 1. Command for 'rg' (Content Search)
----
-local vimgrep_arguments = {
-  "rg",
-  "--color=never",
-  "--no-heading",
-  "--with-filename",
-  "--line-number",
-  "--column",
-  "--smart-case",
-  "--hidden",
-}
--- Add rg-style exclusion globs ("!pattern")
-for _, pattern in ipairs(exclude_patterns) do
-  table.insert(vimgrep_arguments, "--glob=!" .. pattern)
-end
-
----
--- 2. Command for 'fd' (File Name Search)
----
-local fd_command = {
-  "fd",
-  "--type=file", -- Search for files (common practice)
-  "--hidden",    -- Show hidden files
-}
--- Add fd-style exclusion arguments ("--exclude pattern")
-for _, pattern in ipairs(exclude_patterns) do
-  table.insert(fd_command, "--exclude=" .. pattern)
-end
-
----
--- 3. Telescope Setup
----
-require("telescope").setup({
-  defaults = {
-    mappings = {
-      i = { ["<Esc>"] = require("telescope.actions").close },
-    },
-    -- This sets the default for content searches (live_grep, etc.)
-    -- This correctly uses 'rg'
-    vimgrep_arguments = vimgrep_arguments,
+-- fzf-lua Configuration
+require("fzf-lua").setup({
+  keymap = {
+    -- The fzf prompt is a "buffer", so make exiting insert close it fully
+    i = { ["<Esc>"] = "close" },
   },
-  pickers = {
-    find_files = {
-      -- This overrides the command for file name searches
-      -- This now correctly uses 'fd' and its syntax
-      find_command = fd_command,
-      hidden = true, -- Tell telescope to respect our '--hidden' flag
-    },
-  },
+
+  -- No 'files', 'grep', or 'live_grep' overrides are needed.
+  -- fzf-lua will automatically use 'fd' and 'rg' if they are
+  -- available on your $PATH, and they will respect your
+  -- .gitignore and .rgignore files.
 })
-
 
 require("auto-save").setup({
   verbose = true,
@@ -158,13 +84,13 @@ vim.opt.shiftwidth = 2
 vim.opt.autoindent = true
 vim.opt.expandtab = true
 
--- Telescope keybinds
-vim.keymap.set("n", "<leader>f",  "<cmd>Telescope find_files<cr>")
-vim.keymap.set("n", "<leader>g",  "<cmd>Telescope live_grep<cr>")
-vim.keymap.set("n", "<leader>b",  "<cmd>Telescope buffers<cr>")
-vim.keymap.set("n", "<leader>h",  "<cmd>Telescope help_tags<cr>")
-vim.keymap.set("n", "<leader>e",  "<cmd>Telescope diagnostics<cr>")
-vim.keymap.set("n", "<leader>s",  "<cmd>AutoSession search<cr>")
+-- fzf-lua keybinds
+vim.keymap.set("n", "<leader>f", "<cmd>FzfLua files<cr>")
+vim.keymap.set("n", "<leader>g", "<cmd>FzfLua live_grep<cr>")
+vim.keymap.set("n", "<leader>b", "<cmd>FzfLua buffers<cr>")
+vim.keymap.set("n", "<leader>h", "<cmd>FzfLua help_tags<cr>")
+vim.keymap.set("n", "<leader>e", "<cmd>FzfLua diagnostics_workspace<cr>")
+vim.keymap.set("n", "<leader>s", "<cmd>AutoSession search<cr>")
 
 -- Format and save
 vim.keymap.set("n", "<leader>w",  "<cmd>ClangFormat<cr><cmd>write<cr>")
