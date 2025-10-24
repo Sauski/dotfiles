@@ -106,23 +106,105 @@ vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
 vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
 vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float)
 
+
+--
+-- SCROLLING
+--
+
+vim.opt.scroll = 10;
+vim.opt.scrolloff = 5;
+
 -- Neovide animation speed
-vim.g.neovide_scroll_animation_length = 0.18
-vim.g.neovide_cursor_animation_length = 0.10
+vim.g.neovide_scroll_animation_length = 0.3
+vim.g.neovide_cursor_animation_length = 0.1
 
--- Smart scrolling that prevents scrolling into empty space
+--- Gets the amount to scroll, respecting 'scroll' (0 = half-window)
+local function get_scroll_amount()
+  local s = vim.opt.scroll:get()
+  return s > 0 and s or math.floor(vim.api.nvim_win_get_height(0) / 2)
+end
+
+--- Scrolls the window down, bringing the cursor if 'scrolloff' is set.
 local function scroll_down()
-  local amount = math.min(15, vim.api.nvim_buf_line_count(0) - vim.api.nvim_win_get_height(0) + 1 - vim.fn.line('w0'))
-  if amount > 0 then vim.cmd('normal! ' .. amount .. '\x05') end
+  local amount = get_scroll_amount()
+  local win = 0
+  local buf = 0
+  
+  -- Get current view
+  local current_top = vim.fn.line('w0')
+  local height = vim.api.nvim_win_get_height(win)
+  local total_lines = vim.api.nvim_buf_line_count(buf)
+  
+  -- Calculate new top line
+  local max_top = math.max(1, total_lines - height + 1)
+  local new_top = math.min(current_top + amount, max_top)
+  
+  if new_top == current_top then return end -- No change
+  
+  -- 1. Perform the scroll (fast, atomic)
+  -- This is the correct way to set the topline via the API
+  vim.api.nvim_win_call(win, function()
+    vim.fn.winrestview({ topline = new_top })
+  end)
+  
+  -- 2. Manually enforce 'scrolloff'
+  local so = vim.opt.scrolloff:get()
+  local cursor = vim.api.nvim_win_get_cursor(win)
+  local cursor_line = cursor[1]
+  
+  -- Check if cursor is now in the top 'scrolloff' margin
+  local safe_line = new_top + so
+  if cursor_line < safe_line then
+    local new_cursor_line = math.min(safe_line, total_lines)
+    vim.api.nvim_win_set_cursor(win, {new_cursor_line, cursor[2]})
+  end
 end
 
+--- Scrolls the window up, bringing the cursor if 'scrolloff' is set.
 local function scroll_up()
-  local amount = math.min(15, vim.fn.line('w0') - 1)
-  if amount > 0 then vim.cmd('normal! ' .. amount .. '\x19') end
+  local amount = get_scroll_amount()
+  local win = 0
+  
+  -- Get current view
+  local current_top = vim.fn.line('w0')
+  
+  -- Calculate new top line
+  local new_top = math.max(1, current_top - amount)
+  
+  if new_top == current_top then return end -- No change
+  
+  -- 1. Perform the scroll (fast, atomic)
+  vim.api.nvim_win_call(win, function()
+    vim.fn.winrestview({ topline = new_top })
+  end)
+  
+  -- 2. Manually enforce 'scrolloff'
+  local so = vim.opt.scrolloff:get()
+  local height = vim.api.nvim_win_get_height(win)
+  local cursor = vim.api.nvim_win_get_cursor(win)
+  local cursor_line = cursor[1]
+  
+  -- Check if cursor is now in the bottom 'scrolloff' margin
+  local safe_line = new_top + height - 1 - so
+  if cursor_line > safe_line then
+    local new_cursor_line = math.max(1, safe_line)
+    vim.api.nvim_win_set_cursor(win, {new_cursor_line, cursor[2]})
+  end
 end
 
-vim.keymap.set('n', '<C-d>', scroll_down, { noremap = true, silent = true })
-vim.keymap.set('n', '<C-u>', scroll_up, { noremap = true, silent = true })
+---
+-- MAPPINGS
+---
+local map_opts = { noremap = true, silent = true }
+
+-- For n, i, v, the Lua function can be called directly.
+vim.keymap.set({'n', 'i', 'v'}, '<C-d>', scroll_down, map_opts)
+vim.keymap.set({'n', 'i', 'v'}, '<C-u>', scroll_up, map_opts)
+
+-- For 't' (terminal) mode, we MUST use <Cmd> to prevent
+-- sending the keys to the running shell.
+vim.keymap.set('t', '<C-d>', '<Cmd>lua scroll_down()<CR>', map_opts)
+vim.keymap.set('t', '<C-u>', '<Cmd>lua scroll_up()<CR>', map_opts)---
 
 -- Don't auto-equalize splits on open/close
 vim.opt.equalalways = false

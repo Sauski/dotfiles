@@ -162,8 +162,8 @@ local function execute_command(cmd, scanner_path, git_root, on_diagnostic, on_co
       {script_path},
       {text = true, stdout = on_stdout},
       function(result)
-        vim.fn.delete(script_path)
         vim.schedule(function()
+          vim.fn.delete(script_path)
           if verbose then
             vim.notify(
               string.format("[quickbuild] Command completed with exit code %d: %s", result.code, cmd),
