@@ -24,8 +24,10 @@ require('nvim-treesitter.configs').setup({
 -- fzf-lua Configuration
 require("fzf-lua").setup({
   keymap = {
-    -- The fzf prompt is a "buffer", so make exiting insert close it fully
-    i = { ["<Esc>"] = "close" },
+    builtin = {
+      ["<C-d>"] = "preview-page-down",
+      ["<C-u>"] = "preview-page-up",
+    },
   },
 
   -- No 'files', 'grep', or 'live_grep' overrides are needed.
