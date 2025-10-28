@@ -66,6 +66,7 @@ echo ""
 echo "Creating symlinks..."
 create_symlink "$DOTFILES_DIR/.config/nvim" "$NVIM_TARGET" "Neovim"
 create_symlink "$DOTFILES_DIR/.config/neovide" "$NEOVIDE_TARGET" "Neovide"
+create_symlink "$DOTFILES_DIR/.config/git" "$HOME/.config/git" "Git Config"
 
 echo ""
 echo "Setting up Claude Code config..."

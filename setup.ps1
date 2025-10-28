@@ -102,6 +102,7 @@ function Create-HardLink {
 Write-Host "`nCreating symlinks..." -ForegroundColor Cyan
 Create-Symlink -Source "$DOTFILES_DIR\.config\nvim" -Target $NVIM_TARGET -Name "Neovim"
 Create-Symlink -Source "$DOTFILES_DIR\.config\neovide" -Target $NEOVIDE_TARGET -Name "Neovide"
+Create-Symlink -Source "$DOTFILES_DIR\.config\git" -Target "$OriginalUserProfile\.config\git" -Name "Git Config"
 
 Write-Host "`nSetting up Claude Code config..." -ForegroundColor Cyan
 if (-not (Test-Path $CLAUDE_TARGET)) {
