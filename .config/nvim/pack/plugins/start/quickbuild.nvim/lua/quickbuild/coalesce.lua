@@ -80,7 +80,7 @@ function M.coalesce(diagnostics)
       col = coalesced.col,
       severity = coalesced.severity,
       source = coalesced.source,
-      message = severity_prefix .. ": " .. table.concat(prefixed_messages, "\n"),
+      message = severity_prefix .. ": " .. table.concat(prefixed_messages, " | "),
     })
   end
 

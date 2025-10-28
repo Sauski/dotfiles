@@ -186,6 +186,23 @@ describe("E2E build", function()
     assert.is_true(#all_diagnostics > 0,
       string.format("Diagnostics should be published to namespace. Got %d diagnostics",
         #all_diagnostics))
+
+    -- Assert each diagnostic has required fields for fzf preview
+    for i, diag in ipairs(all_diagnostics) do
+      assert.is_not_nil(diag.filename, string.format("Diagnostic %d missing filename field", i))
+      assert.is_not_nil(diag.source, string.format("Diagnostic %d missing source field", i))
+      assert.is_not_nil(diag.lnum, string.format("Diagnostic %d missing lnum field", i))
+      assert.is_not_nil(diag.message, string.format("Diagnostic %d missing message field", i))
+
+      -- Assert buffer name matches filename (critical for fzf preview on Windows)
+      local bufname = vim.api.nvim_buf_get_name(diag.bufnr)
+      assert.equals(diag.filename, bufname,
+        string.format("Diagnostic %d: bufname doesn't match filename. This breaks fzf preview.", i))
+
+      -- Assert filename is absolute path with forward slashes (scanner output format)
+      assert.is_true(diag.filename:match("^[A-Za-z]:/") ~= nil or diag.filename:match("^/") ~= nil,
+        string.format("Diagnostic %d: filename should be absolute with forward slashes: %s", i, diag.filename))
+    end
   end)
 
   it("auto-builds on save when configured", function()

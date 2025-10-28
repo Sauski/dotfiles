@@ -2,15 +2,6 @@
 
 local M = {}
 
--- Normalize file path to native format (backslashes on Windows)
-local function normalize_path(path)
-  local is_windows = vim.loop.os_uname().sysname:find("Windows") ~= nil
-  if is_windows then
-    return path:gsub("/", "\\")
-  end
-  return path
-end
-
 -- Parse single diagnostic line from scanner
 -- Format: file:line:col:severity:message
 -- Uses regex matching to handle Windows paths (C:/) correctly
@@ -43,9 +34,11 @@ function M.parse_line(line, git_root)
   local vim_severity = severity_map[severity:lower()] or vim.diagnostic.severity.ERROR
 
   return {
-    file = normalize_path(file),
-    lnum = line_num - 1,  -- vim.diagnostic uses 0-indexed lines
-    col = col_num,
+    file = file,
+    lnum = line_num - 1,  -- 0-indexed
+    col = col_num - 1,    -- 0-indexed
+    end_lnum = line_num - 1,
+    end_col = col_num - 1,
     severity = vim_severity,
     message = message,
   }
@@ -64,6 +57,8 @@ function M.group_by_file(diagnostics)
     table.insert(grouped[file], {
       lnum = diag.lnum,
       col = diag.col,
+      end_lnum = diag.end_lnum,
+      end_col = diag.end_col,
       severity = diag.severity,
       message = diag.message,
       source = diag.source,
