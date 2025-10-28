@@ -57,6 +57,7 @@ function M.group_by_file(diagnostics)
       col = diag.col,
       severity = diag.severity,
       message = diag.message,
+      source = diag.source,
     })
   end
 

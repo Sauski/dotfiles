@@ -1,6 +1,7 @@
 -- builder.lua: Sequential command execution with scanner integration
 
 local diagnostic = require("quickbuild.diagnostic")
+local coalesce = require("quickbuild.coalesce")
 
 local M = {}
 
@@ -49,11 +50,24 @@ local function load_config(git_root)
     return nil, ".quickbuild.json must contain 'commands' array"
   end
 
+  -- Validate command format
+  for i, cmd in ipairs(config.commands) do
+    if type(cmd) ~= "table" then
+      return nil, string.format("Command %d must be an object with 'name' and 'command' fields", i)
+    end
+    if not cmd.name or type(cmd.name) ~= "string" or cmd.name == "" then
+      return nil, string.format("Command %d missing or invalid 'name' field", i)
+    end
+    if not cmd.command or type(cmd.command) ~= "string" or cmd.command == "" then
+      return nil, string.format("Command %d missing or invalid 'command' field", i)
+    end
+  end
+
   return config, nil
 end
 
 -- Process scanner output line-by-line in real-time
-local function process_scanner_output(data, diagnostics, git_root, on_diagnostic)
+local function process_scanner_output(data, diagnostics, git_root, source, on_diagnostic)
   if not data then
     return false
   end
@@ -62,6 +76,7 @@ local function process_scanner_output(data, diagnostics, git_root, on_diagnostic
   for line in data:gmatch("[^\r\n]+") do
     local diag = diagnostic.parse_line(line, git_root)
     if diag then
+      diag.source = source
       table.insert(diagnostics, diag)
       if diag.severity == vim.diagnostic.severity.ERROR then
         has_error = true
@@ -77,14 +92,14 @@ end
 -- Execute single command with scanner (async with real-time streaming)
 -- Windows: Uses PowerShell native piping to avoid vim.system() bugs
 -- Unix: Uses temporary shell script for consistent behavior
-local function execute_command(cmd, scanner_path, git_root, on_diagnostic, on_complete, verbose)
+local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic, on_complete, verbose)
   local diagnostics = {}
   local has_error = false
   local is_windows = vim.loop.os_uname().sysname:find("Windows") ~= nil
 
   if verbose then
     vim.schedule(function()
-      vim.notify("[quickbuild] Running: " .. cmd, vim.log.levels.INFO)
+      vim.notify(string.format("[quickbuild] Running '%s': %s", name, cmd), vim.log.levels.INFO)
     end)
   end
 
@@ -102,7 +117,7 @@ local function execute_command(cmd, scanner_path, git_root, on_diagnostic, on_co
 
     if data then
       vim.schedule(function()
-        if process_scanner_output(data, diagnostics, git_root, on_diagnostic) then
+        if process_scanner_output(data, diagnostics, git_root, name, on_diagnostic) then
           has_error = true
         end
       end)
@@ -208,16 +223,18 @@ local function execute_sequential(commands, scanner_path, git_root, on_complete,
       return
     end
 
-    local cmd = commands[current_index]
+    local cmd_obj = commands[current_index]
 
     active_job = execute_command(
-      cmd,
+      cmd_obj.command,
+      cmd_obj.name,
       scanner_path,
       git_root,
       function(diag)
         table.insert(all_diagnostics, diag)
-        -- Publish incrementally
-        diagnostic.publish(all_diagnostics, namespace)
+        -- Publish incrementally with coalescing
+        local coalesced = coalesce.coalesce(all_diagnostics)
+        diagnostic.publish(coalesced, namespace)
       end,
       function(diagnostics, has_error, exit_code)
         -- Add to total diagnostics
@@ -296,13 +313,16 @@ local function start_build_now(opts)
     function(diagnostics, has_error)
       active_job = nil
 
+      -- Coalesce diagnostics by location
+      local coalesced = coalesce.coalesce(diagnostics)
+
       -- Final publish
-      diagnostic.publish(diagnostics, namespace)
+      diagnostic.publish(coalesced, namespace)
 
       -- Count diagnostics
       error_count = 0
       warning_count = 0
-      for _, diag in ipairs(diagnostics) do
+      for _, diag in ipairs(coalesced) do
         if diag.severity == vim.diagnostic.severity.ERROR then
           error_count = error_count + 1
         elseif diag.severity == vim.diagnostic.severity.WARN then

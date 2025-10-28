@@ -10,8 +10,8 @@
     }
   ],
   "commands": [
-    "cmake -B build -S .",
-    "cmake --build build --config Release"
+    {"name": "Configure", "command": "cmake -B build -S ."},
+    {"name": "Build", "command": "cmake --build build --config Release"}
   ],
   "auto_build_on_save": true,
   "file_patterns": ["*.cpp", "*.hpp", "*.c", "*.h"],

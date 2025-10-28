@@ -29,7 +29,9 @@ Binary: `scanner/build/Release/qb-scanner.exe` (Windows) or `scanner/build/qb-sc
 ### Tests
 
 **C++**: `cd scanner/build && ctest -C Release`
-**Lua**: `nvim --headless -u tests/minimal_init.lua -c "lua require('plenary.test_harness').test_directory('tests/', { minimal_init = './tests/minimal_init.lua' })"`
+**Lua**: `XDG_DATA_HOME="./tests/.nvim-data" XDG_STATE_HOME="./tests/.nvim-data" XDG_CONFIG_HOME="./tests/.nvim-data" NVIM_APPNAME=qb-test nvim --headless -u tests/minimal_init.lua -c "lua require('plenary.test_harness').test_directory('tests/', { minimal_init = './tests/minimal_init.lua' })"`
+
+**Note**: Environment variables isolate test neovim instance from installed plugin copies.
 
 **Required**: All tests must pass before stopping.
 

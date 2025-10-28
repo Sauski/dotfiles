@@ -1,0 +1,17 @@
+{
+  "patterns": [
+    {
+      "regex": "^../../(.+?):(\\d+):(\\d+): (error|warning|note): (.+)$",
+      "groups": {"file": 1, "line": 2, "col": 3, "severity": 4, "message": 5}
+    }
+  ],
+  "commands": [
+    {"name": "Build", "command": "autoninja -C out/Debug"}
+  ],
+  "auto_build_on_save": true,
+  "file_patterns": [
+    "*.cc",
+    "*.h"
+  ],
+  "debounce_ms": 500
+}

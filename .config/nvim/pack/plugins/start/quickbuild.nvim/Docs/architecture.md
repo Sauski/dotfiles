@@ -32,7 +32,7 @@ Build Process (sequential, stop on first error)
     ↓ stdout/stderr
 Scanner Binary (std::regex pattern matching)
     ↓ diagnostic format
-Neovim Lua
+Neovim Lua (parse + coalesce by location)
     ↓ vim.diagnostic.set()
 Display
 ```
@@ -54,3 +54,4 @@ Cross-platform via:
 3. **Line-buffered**: Diagnostics appear during build
 4. **Single config**: Commands + patterns in `.quickbuild.json`
 5. **Git root**: Always use git root as project root
+6. **Location-based coalescing**: Multi-line errors merged by file:line:col

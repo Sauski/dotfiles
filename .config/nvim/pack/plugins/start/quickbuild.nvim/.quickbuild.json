@@ -10,9 +10,9 @@
     }
   ],
   "commands": [
-    "cmake -B scanner/build -S scanner",
-    "cmake --build scanner/build --config Release",
-    "ctest --test-dir scanner/build -C Release"
+    {"name": "Configure", "command": "cmake -B scanner/build -S scanner"},
+    {"name": "Build", "command": "cmake --build scanner/build --config Release"},
+    {"name": "Test", "command": "ctest --test-dir scanner/build -C Release"}
   ],
   "auto_build_on_save": true,
   "file_patterns": ["*.cpp", "*.hpp", "*.c", "*.h"],
