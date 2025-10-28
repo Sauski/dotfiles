@@ -21,25 +21,46 @@ function M.setup(opts)
     completion_duration_ms = opts.statusline_completion_duration_ms,
   })
 
-  -- Load project config from .quickbuild.json
-  local project_config = builder.get_project_config()
+  -- Always register autocmd on buffer saves
+  -- Check at runtime if auto-build is enabled and file matches patterns
+  vim.api.nvim_create_autocmd("BufWritePost", {
+    callback = function(ev)
+      -- Check if current project has auto-build enabled
+      local project_config = builder.get_project_config()
+      if not project_config or not project_config.auto_build_on_save then
+        return  -- Auto-build not enabled for this project
+      end
 
-  if project_config and project_config.auto_build_on_save then
-    local file_patterns = project_config.file_patterns or {}
-    local debounce_ms = project_config.debounce_ms or 500
+      -- Check if file matches configured patterns
+      local file_patterns = project_config.file_patterns or {}
+      if #file_patterns == 0 then
+        return  -- No patterns configured
+      end
 
-    if #file_patterns > 0 then
-      vim.api.nvim_create_autocmd("BufWritePost", {
-        pattern = file_patterns,
-        callback = function()
-          M.build({
-            debounce_ms = debounce_ms,
-          })
-        end,
-        group = vim.api.nvim_create_augroup("quickbuild_auto", { clear = true }),
+      local bufname = vim.api.nvim_buf_get_name(ev.buf)
+      local filename = vim.fn.fnamemodify(bufname, ":t")
+      local matched = false
+      for _, pattern in ipairs(file_patterns) do
+        if vim.fn.match(filename, vim.fn.glob2regpat(pattern)) >= 0 then
+          matched = true
+          break
+        end
+      end
+
+      if not matched then
+        return  -- File doesn't match configured patterns
+      end
+
+      -- All checks passed, trigger build
+      local debounce_ms = project_config.debounce_ms or 500
+      M.build({
+        debounce_ms = debounce_ms,
+        bufnr = ev.buf,
       })
-    end
-  end
+    end,
+    group = vim.api.nvim_create_augroup("quickbuild_auto", { clear = true }),
+  })
+
 
   -- Setup VimLeavePre to cancel builds on quit
   vim.api.nvim_create_autocmd("VimLeavePre", {

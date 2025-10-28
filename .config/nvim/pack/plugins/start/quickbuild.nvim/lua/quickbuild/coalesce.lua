@@ -58,6 +58,7 @@ function M.coalesce(diagnostics)
         lnum = diag.lnum,
         col = diag.col,
         severity = diag.severity,
+        source = diag.source,
         messages = { diag.message },
       }
     end
@@ -78,6 +79,7 @@ function M.coalesce(diagnostics)
       lnum = coalesced.lnum,
       col = coalesced.col,
       severity = coalesced.severity,
+      source = coalesced.source,
       message = severity_prefix .. ": " .. table.concat(prefixed_messages, "\n"),
     })
   end

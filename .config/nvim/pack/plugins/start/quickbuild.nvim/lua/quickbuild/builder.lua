@@ -385,8 +385,8 @@ function M.build(opts)
 
   -- Check if the current buffer actually changed (for auto-saves)
   if opts.debounce_ms and opts.debounce_ms > 0 then
-    local current_bufnr = vim.api.nvim_get_current_buf()
-    if not buffer_has_changed(current_bufnr) then
+    local bufnr = opts.bufnr or vim.api.nvim_get_current_buf()
+    if not buffer_has_changed(bufnr) then
       -- Buffer unchanged, skip build
       return
     end
