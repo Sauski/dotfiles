@@ -41,11 +41,26 @@ require("auto-save").setup({
 })
 require("quickbuild").setup()
 require("lualine").setup({
+  options = {
+    section_separators = '',    -- No section separators
+    component_separators = ''   -- No component separators
+  },
   sections = {
-    lualine_b = {'diagnostics'},
+    lualine_a = {},
+    lualine_b = {},
+    lualine_c = {
+      {
+        'mode',
+        fmt = function(s)
+          return vim.fn.mode() == 'n' and ' ' or s:sub(1,1)  -- Single letter or space in normal
+        end
+      },
+      'filename',
+      'diagnostics'
+    },
     lualine_x = {
       function()
-        return require("quickbuild.statusline").get()
+        return require("quickbuild.statusline").get()  -- Build status (displays when relevant)
       end
     },
     lualine_y = {},
@@ -71,6 +86,7 @@ vim.opt.termguicolors = true	-- 24bit color
 vim.opt.mouse = 'a'		-- Mouse in all modes
 vim.opt.fillchars:append({ eob = " ", vert = " " })  -- Hide tildes and buffer dividers
 vim.opt.signcolumn = "yes:1"	-- Always show 1-char sign column
+vim.opt.showmode = false	-- Hide mode (lualine shows it)
 
 -- Backup and temp files in home directory
 local cache_dir = vim.fn.stdpath('cache')
