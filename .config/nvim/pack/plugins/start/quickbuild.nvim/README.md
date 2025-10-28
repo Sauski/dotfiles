@@ -99,8 +99,10 @@ Navigate diagnostics with `]d` / `[d`.
 
 ```lua
 require("quickbuild").setup({
-  scanner_path = "/custom/path",  -- Override scanner location
-  verbose = true,                  -- Show build progress
+  scanner_path = "/custom/path",               -- Override scanner location
+  verbose = true,                               -- Show build progress
+  statusline = true,                            -- Enable statusline (default: true)
+  statusline_completion_duration_ms = 2000,    -- Show completion status duration (default: 2000)
 })
 ```
 
@@ -111,8 +113,23 @@ local qb = require("quickbuild")
 
 qb.build()                          -- Trigger build
 qb.cancel()                         -- Cancel build
-qb.get_status()                     -- { is_running, errors, warnings }
+qb.get_status()                     -- { is_running, stage, errors, warnings }
 qb.get_namespace()                  -- Diagnostic namespace
+qb.statusline()                     -- Get statusline text
+```
+
+## Statusline Integration
+
+```lua
+-- lualine example
+require('lualine').setup({
+  sections = {
+    lualine_x = { require('quickbuild').statusline },
+  }
+})
+
+-- vim statusline
+vim.opt.statusline = "%{luaeval('require(\"quickbuild\").statusline()')}"
 ```
 
 ## Commands

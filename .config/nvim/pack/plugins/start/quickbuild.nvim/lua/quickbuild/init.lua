@@ -1,6 +1,7 @@
 -- init.lua: Main quickbuild module
 
 local builder = require("quickbuild.builder")
+local statusline = require("quickbuild.statusline")
 
 local M = {}
 
@@ -13,6 +14,12 @@ function M.setup(opts)
     scanner_path = opts.scanner_path,
     verbose = opts.verbose or false,
   }
+
+  -- Setup statusline
+  statusline.setup({
+    enabled = opts.statusline ~= false,
+    completion_duration_ms = opts.statusline_completion_duration_ms,
+  })
 
   -- Load project config from .quickbuild.json
   local project_config = builder.get_project_config()
@@ -83,6 +90,11 @@ end
 -- Get diagnostic namespace (for custom integrations)
 function M.get_namespace()
   return builder.get_namespace()
+end
+
+-- Get statusline text
+function M.statusline()
+  return statusline.get()
 end
 
 return M

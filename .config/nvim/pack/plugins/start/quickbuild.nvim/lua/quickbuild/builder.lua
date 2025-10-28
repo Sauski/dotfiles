@@ -2,6 +2,7 @@
 
 local diagnostic = require("quickbuild.diagnostic")
 local coalesce = require("quickbuild.coalesce")
+local statusline = require("quickbuild.statusline")
 
 local M = {}
 
@@ -11,6 +12,7 @@ local debounce_timer = nil
 local error_count = 0
 local warning_count = 0
 local cancel_count = 0
+local current_stage = nil
 local namespace = vim.api.nvim_create_namespace("quickbuild")
 local last_changedtick = {}  -- Track b:changedtick per buffer to detect actual changes
 
@@ -217,6 +219,8 @@ local function execute_sequential(commands, scanner_path, git_root, on_complete,
   local function run_next()
     if current_index > #commands then
       -- All commands completed
+      current_stage = nil
+      statusline.set_completed(true)
       if on_complete then
         on_complete(all_diagnostics, false)
       end
@@ -224,6 +228,8 @@ local function execute_sequential(commands, scanner_path, git_root, on_complete,
     end
 
     local cmd_obj = commands[current_index]
+    current_stage = cmd_obj.name
+    statusline.set_building(current_stage)
 
     active_job = execute_command(
       cmd_obj.command,
@@ -244,6 +250,8 @@ local function execute_sequential(commands, scanner_path, git_root, on_complete,
 
         -- Stop on first error
         if has_error or exit_code ~= 0 then
+          current_stage = nil
+          statusline.set_completed(false)
           if on_complete then
             on_complete(all_diagnostics, true)
           end
@@ -480,6 +488,8 @@ function M.cancel()
   if active_job then
     active_job:kill(9)  -- SIGKILL immediately
     active_job = nil
+    current_stage = nil
+    statusline.set_idle()
   end
 end
 
@@ -487,6 +497,7 @@ end
 function M.get_status()
   return {
     is_running = active_job ~= nil,
+    stage = current_stage,
     errors = error_count,
     warnings = warning_count,
   }

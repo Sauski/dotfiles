@@ -40,6 +40,18 @@ require("auto-save").setup({
   verbose = true,
 })
 require("quickbuild").setup()
+require("lualine").setup({
+  sections = {
+    lualine_b = {'diagnostics'},
+    lualine_x = {
+      function()
+        return require("quickbuild.statusline").get()
+      end
+    },
+    lualine_y = {},
+    lualine_z = {}
+  }
+})
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"  -- Recommended by auto-session
 require("auto-session").setup({
   auto_save = true,
