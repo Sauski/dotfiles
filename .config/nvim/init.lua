@@ -2,6 +2,8 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+vim.g.neovide_input_macos_option_key_is_meta = 'both'
+
 -- Load plugins after runtimepath is set
 vim.cmd('packloadall')
 
@@ -28,6 +30,9 @@ require("fzf-lua").setup({
       ["<C-d>"] = "preview-page-down",
       ["<C-u>"] = "preview-page-up",
     },
+  },
+  oldfiles = {
+    include_current_session = true,
   },
 
   -- No 'files', 'grep', or 'live_grep' overrides are needed.
@@ -120,6 +125,7 @@ vim.keymap.set("n", "<leader>g", "<cmd>FzfLua live_grep<cr>")
 vim.keymap.set("n", "<leader>b", "<cmd>FzfLua buffers<cr>")
 vim.keymap.set("n", "<leader>h", "<cmd>FzfLua help_tags<cr>")
 vim.keymap.set("n", "<leader>e", "<cmd>FzfLua diagnostics_workspace<cr>")
+vim.keymap.set("n", "<leader>o", "<cmd>FzfLua oldfiles<cr>")
 vim.keymap.set("n", "<leader>s", "<cmd>AutoSession search<cr>")
 
 -- Format and save
@@ -224,7 +230,6 @@ end
 -- MAPPINGS
 ---
 local map_opts = { noremap = true, silent = true }
-
 -- For n, i, v, the Lua function can be called directly.
 vim.keymap.set({'n', 'i', 'v'}, '<C-d>', scroll_down, map_opts)
 vim.keymap.set({'n', 'i', 'v'}, '<C-u>', scroll_up, map_opts)
