@@ -163,6 +163,20 @@ vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
 vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
 vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float)
 
+-- Smart insert: use cc behavior on blank lines for proper indentation
+local function smart_insert(fallback_key)
+  return function()
+    if vim.api.nvim_get_current_line():match('^%s*$') then
+      return '"_cc'
+    else
+      return fallback_key
+    end
+  end
+end
+
+vim.keymap.set('n', 'i', smart_insert('i'), { expr = true, noremap = true })
+vim.keymap.set('n', 'a', smart_insert('a'), { expr = true, noremap = true })
+vim.keymap.set('n', 'A', smart_insert('A'), { expr = true, noremap = true })
 
 --
 -- SCROLLING
