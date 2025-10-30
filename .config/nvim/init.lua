@@ -84,14 +84,27 @@ vim.g['clang_format#code_style'] = 'chromium'
 vim.g['clang_format#auto_format'] = 0
 
 -- Some basic quality of life items
-vim.opt.number = true 		-- Show line numbers
 vim.opt.ignorecase = true	-- Ignore case ...
 vim.opt.smartcase = true	-- ... unless specified
 vim.opt.termguicolors = true	-- 24bit color
 vim.opt.mouse = 'a'		-- Mouse in all modes
 vim.opt.fillchars:append({ eob = " ", vert = " " })  -- Hide tildes and buffer dividers
 vim.opt.signcolumn = "yes:1"	-- Always show 1-char sign column
+vim.opt_local.numberwidth = 3 -- minimum 3 digets for line numbers 
 vim.opt.showmode = false	-- Hide mode (lualine shows it)
+
+-- Re-Run status colum things on window creation to avoid lualine plugin wonkyness.
+-- TOOD Is this _really_ needed?
+vim.opt_local.number = true
+vim.opt_local.statuscolumn = '%l%=%s' -- Move numbers to the left
+vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter', 'FileType' }, {
+  pattern = '*',
+  desc = 'Set custom statuscolumn',
+  callback = function()
+    vim.opt_local.number = true
+    vim.opt_local.statuscolumn = '%l%=%s' -- Move numbers to the left
+  end,
+})
 
 -- Backup and temp files in home directory
 local cache_dir = vim.fn.stdpath('cache')
