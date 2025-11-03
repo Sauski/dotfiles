@@ -7,9 +7,8 @@ vim.g.neovide_input_macos_option_key_is_meta = 'both'
 -- Load plugins after runtimepath is set
 vim.cmd('packloadall')
 
--- Leap configuration - swap default mappings
+-- Leap configuration
 vim.keymap.set({'n', 'x', 'o'}, 's', '<Plug>(leap-anywhere)')  -- All windows (including current)
-vim.keymap.set('n', 'S', '<Plug>(leap)')  -- Current window only
 
 require("nvim-treesitter.install").compilers = { "clang" }
 
@@ -55,6 +54,11 @@ require("auto-save").setup({
   verbose = true,
 })
 require("quickbuild").setup()
+
+local cokeline_config = require("config.cokeline")
+require('cokeline').setup(cokeline_config.config)
+cokeline_config.setup_keymaps()
+
 require("lualine").setup({
   options = {
     section_separators = '',    -- No section separators
@@ -306,7 +310,6 @@ vim.opt.equalalways = false
 -- Split navigation and management (work in all modes)
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-]>', '<Esc><C-w>w', { noremap = true, silent = true })  -- Cycle forward (Alt+])
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-[>', '<Esc><C-w>W', { noremap = true, silent = true })  -- Cycle backward (Alt+[)
-vim.keymap.set({'n', 'i', 'v', 't'}, '<M-{>', '<Esc><C-w>c', { noremap = true, silent = true })  -- Close split (Alt+{)
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-}>', '<Esc><C-w>=', { noremap = true, silent = true })  -- Equalize splits (Alt+})
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-C-PageUp>', '<Esc><cmd>vsplit<cr>', { noremap = true, silent = true })  -- Vertical split
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-C-PageDown>', '<Esc><cmd>split<cr>', { noremap = true, silent = true })  -- Horizontal split
