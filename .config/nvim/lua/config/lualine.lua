@@ -52,9 +52,14 @@ return {
     lualine_b = {},
     lualine_c = {
       {
+        'mode',
+        fmt = mode_formatter
+      },
+      {
         'filename',
         padding = { left = 1, right = 1 }
-      }
+      },
+      'diagnostics'
     },
     lualine_x = {},
     lualine_y = {},
