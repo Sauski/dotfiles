@@ -12,6 +12,7 @@ require('nvim-treesitter.configs').setup(require('config.treesitter'))
 require('mini.indentscope').setup(require('config.indentscope'))
 require("fzf-lua").setup(require('config.fzf'))
 require("lualine").setup(require('config.lualine'))
+vim.opt.laststatus = 0
 
 require("auto-save").setup({ verbose = true })
 require("quickbuild").setup()
