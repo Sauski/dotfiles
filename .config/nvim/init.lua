@@ -172,6 +172,12 @@ local function open_other_in_other_window()
 end
 vim.keymap.set("n", "<leader>r", open_other_in_other_window)
 
+-- Force picker (ignore remembered buffer)
+vim.keymap.set("n", "<leader>R", function()
+  vim.b.onv_otherFile = nil
+  open_other_in_other_window()
+end)
+
 -- QuickBuild keybinds
 vim.keymap.set("n", "<leader>bb", "<cmd>QuickBuild<cr>")
 vim.keymap.set("n", "<leader>bc", "<cmd>QuickBuildCancel<cr>")
