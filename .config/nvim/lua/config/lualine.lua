@@ -32,17 +32,17 @@ return {
     lualine_b = {},
     lualine_c = {
       {
-        'mode',
-        fmt = mode_formatter
-      },
-      {
         'filename',
         padding = { left = 1, right = 1 }
       },
       'diagnostics'
     },
     lualine_x = {
-      build_status
+      build_status,
+      {
+        'mode',
+        fmt = mode_formatter
+      }
     },
     lualine_y = {},
     lualine_z = {}
@@ -52,14 +52,9 @@ return {
     lualine_b = {},
     lualine_c = {
       {
-        'mode',
-        fmt = mode_formatter
-      },
-      {
         'filename',
         padding = { left = 1, right = 1 }
-      },
-      'diagnostics'
+      }
     },
     lualine_x = {},
     lualine_y = {},
