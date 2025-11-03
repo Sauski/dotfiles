@@ -55,9 +55,7 @@ require("auto-save").setup({
 })
 require("quickbuild").setup()
 
-local cokeline_config = require("config.cokeline")
-require('cokeline').setup(cokeline_config.config)
-cokeline_config.setup_keymaps()
+require('cokeline').setup(require("config.cokeline"))
 
 require("lualine").setup({
   options = {
@@ -190,6 +188,19 @@ vim.keymap.set("n", "<leader>bc", "<cmd>QuickBuildCancel<cr>")
 vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
 vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
 vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float)
+
+-- Buffer management keybinds
+local function close_hidden_buffers()
+  require('close_buffers').delete({ type = 'hidden' })
+end
+
+local function close_current_buffer()
+  require('close_buffers').delete({ type = 'this' })
+end
+
+vim.keymap.set('n', 'S', '<Plug>(cokeline-pick-focus)', { silent = true })
+vim.keymap.set('n', '<leader>x', close_hidden_buffers, { silent = true })
+vim.keymap.set({'n', 'i', 'v', 't'}, '<M-{>', close_current_buffer, { noremap = true, silent = true })
 
 -- Smart insert: use cc behavior on blank lines for proper indentation
 local function smart_insert(fallback_key)
