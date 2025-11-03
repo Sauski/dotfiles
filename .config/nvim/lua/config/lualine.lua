@@ -14,8 +14,8 @@ return {
     section_separators = '',
     component_separators = '',
     theme = {
-      normal = { a = { fg = '#282828', bg = '#d3869b', gui = 'bold' }, b = { bg = normal_bg }, c = { bg = normal_bg }, x = { bg = normal_bg }, y = { bg = normal_bg }, z = { bg = normal_bg } },
-      inactive = { a = { fg = '#928374', bg = '#d3869b' }, b = { bg = normal_bg }, c = { bg = normal_bg }, x = { bg = normal_bg }, y = { bg = normal_bg }, z = { bg = normal_bg } },
+      normal = { a = { fg = '#282828', bg = '#a89984', gui = 'bold' }, b = { bg = normal_bg }, c = { bg = normal_bg }, x = { bg = normal_bg }, y = { bg = normal_bg }, z = { bg = normal_bg } },
+      inactive = { a = { fg = '#ebdbb2', bg = '#665c54' }, b = { bg = normal_bg }, c = { bg = normal_bg }, x = { bg = normal_bg }, y = { bg = normal_bg }, z = { bg = normal_bg } },
     }
   },
   sections = {
@@ -44,7 +44,7 @@ return {
         'filename',
         path = 1,
         padding = { left = 1, right = 1 },
-        color = { fg = '#282828', bg = '#d3869b', gui = 'bold' }
+        color = { fg = '#282828', bg = '#a89984', gui = 'bold' }
       }
     },
     lualine_b = {
@@ -72,7 +72,7 @@ return {
         'filename',
         path = 1,
         padding = { left = 1, right = 1 },
-        color = { fg = '#928374', bg = '#d3869b' }
+        color = { fg = '#ebdbb2', bg = '#665c54' }
       }
     },
     lualine_b = {
