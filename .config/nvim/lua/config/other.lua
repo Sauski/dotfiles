@@ -107,7 +107,7 @@ local web_dir_strips = {
   "(.*)/spec/",
 }
 
-return {
+local config = {
   mappings = {
     -- ========================================
     -- C++ File Family
@@ -157,4 +157,26 @@ return {
   },
   rememberBuffers = true,
   showMissingFiles = false,
+}
+
+local function open_other_in_other_window()
+  local current_win = vim.api.nvim_get_current_win()
+  local all_wins = vim.api.nvim_tabpage_list_wins(0)
+  local other_wins = vim.tbl_filter(function(win)
+    return win ~= current_win
+  end, all_wins)
+
+  local target_win = #other_wins > 0 and other_wins[1] or nil
+  require('other-nvim').open(nil, target_win)
+end
+
+local function open_other_picker()
+  vim.b.onv_otherFile = nil
+  open_other_in_other_window()
+end
+
+return {
+  config = config,
+  open_other_in_other_window = open_other_in_other_window,
+  open_other_picker = open_other_picker,
 }
