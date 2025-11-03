@@ -89,6 +89,9 @@ require("auto-session").setup({
   auto_create = true,
 })
 
+-- other.nvim configuration
+require("other-nvim").setup(require("config.other"))
+
 -- Clang-format configuration
 vim.g['clang_format#code_style'] = 'chromium'
 vim.g['clang_format#auto_format'] = 0
@@ -153,6 +156,21 @@ vim.keymap.set("n", "<leader>s", "<cmd>AutoSession search<cr>")
 
 -- Format and save
 vim.keymap.set("n", "<leader>w",  "<cmd>ClangFormat<cr><cmd>write<cr>")
+
+-- other.nvim keybind - open in the other window
+local function open_other_in_other_window()
+  -- Find the other window
+  local current_win = vim.api.nvim_get_current_win()
+  local all_wins = vim.api.nvim_tabpage_list_wins(0)
+  local other_wins = vim.tbl_filter(function(win)
+    return win ~= current_win
+  end, all_wins)
+
+  -- Call other.nvim with target window (if exists)
+  local target_win = #other_wins > 0 and other_wins[1] or nil
+  require('other-nvim').open(nil, target_win)
+end
+vim.keymap.set("n", "<leader>r", open_other_in_other_window)
 
 -- QuickBuild keybinds
 vim.keymap.set("n", "<leader>bb", "<cmd>QuickBuild<cr>")
