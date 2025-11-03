@@ -14,13 +14,15 @@ return {
     section_separators = '',
     component_separators = '',
     theme = {
-      normal = { a = { bg = normal_bg }, b = { bg = normal_bg }, c = { bg = normal_bg }, x = { bg = normal_bg }, y = { bg = normal_bg }, z = { bg = normal_bg } },
-      inactive = { a = { bg = normal_bg }, b = { bg = normal_bg }, c = { bg = normal_bg }, x = { bg = normal_bg }, y = { bg = normal_bg }, z = { bg = normal_bg } },
+      normal = { a = { fg = '#282828', bg = '#d3869b', gui = 'bold' }, b = { bg = normal_bg }, c = { bg = normal_bg }, x = { bg = normal_bg }, y = { bg = normal_bg }, z = { bg = normal_bg } },
+      inactive = { a = { fg = '#928374', bg = '#d3869b' }, b = { bg = normal_bg }, c = { bg = normal_bg }, x = { bg = normal_bg }, y = { bg = normal_bg }, z = { bg = normal_bg } },
     }
   },
   sections = {
     lualine_a = {},
-    lualine_b = {},
+    lualine_b = {
+      function() return '' end
+    },
     lualine_c = {},
     lualine_x = {},
     lualine_y = {},
@@ -28,7 +30,9 @@ return {
   },
   inactive_sections = {
     lualine_a = {},
-    lualine_b = {},
+    lualine_b = {
+      function() return '' end
+    },
     lualine_c = {},
     lualine_x = {},
     lualine_y = {},
@@ -40,10 +44,15 @@ return {
         'filename',
         path = 1,
         padding = { left = 1, right = 1 },
-        color = { bg = '#d3869b' }
+        color = { fg = '#282828', bg = '#d3869b', gui = 'bold' }
       }
     },
-    lualine_b = {},
+    lualine_b = {
+      {
+        function() return ' ' end,
+        color = { bg = normal_bg }
+      }
+    },
     lualine_c = {
       'diagnostics'
     },
@@ -63,10 +72,15 @@ return {
         'filename',
         path = 1,
         padding = { left = 1, right = 1 },
-        color = { bg = '#d3869b' }
+        color = { fg = '#928374', bg = '#d3869b' }
       }
     },
-    lualine_b = {},
+    lualine_b = {
+      {
+        function() return ' ' end,
+        color = { bg = normal_bg }
+      }
+    },
     lualine_c = {},
     lualine_x = {},
     lualine_y = {},
