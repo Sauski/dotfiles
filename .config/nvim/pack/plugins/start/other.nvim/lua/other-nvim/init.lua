@@ -220,8 +220,12 @@ local function process_single_mapping(mapping, current_file, matches)
 	local candidates = is_dir and get_matching_files(target .. "*")
 		or (Config.options.showMissingFiles and not target:match("*") and { target } or get_matching_files(target))
 
+	-- Normalize current_file for comparison (handle Windows path separators)
+	local normalized_current = current_file:gsub("\\", "/")
+
 	for _, candidate in ipairs(candidates) do
-		if not is_duplicate(matches, candidate) and current_file ~= candidate then
+		local normalized_candidate = candidate:gsub("\\", "/")
+		if not is_duplicate(matches, candidate) and normalized_current ~= normalized_candidate then
 			table.insert(matches, create_file_match(mapping.context, candidate))
 		end
 	end
