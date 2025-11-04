@@ -1,7 +1,3 @@
-local function build_status()
-  return require("quickbuild.statusline").get()
-end
-
 local function get_normal_bg()
   local normal_hl = vim.api.nvim_get_hl(0, { name = 'Normal' })
   return string.format('#%06x', normal_hl.bg or 0)
