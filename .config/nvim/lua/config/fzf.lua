@@ -1,3 +1,5 @@
+local actions = require('fzf-lua.actions')
+
 return {
   keymap = {
     builtin = {
@@ -7,5 +9,15 @@ return {
   },
   oldfiles = {
     include_current_session = true,
+  },
+  lines = {
+    actions = {
+      ["default"] = actions.buf_switch_or_edit,
+    },
+  },
+  blines = {
+    actions = {
+      ["default"] = actions.buf_switch_or_edit,
+    },
   },
 }

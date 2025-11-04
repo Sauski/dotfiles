@@ -59,6 +59,11 @@ vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
 vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
 vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float)
 
+vim.keymap.set('n', '<Esc>', function()
+  vim.cmd('nohlsearch')
+  vim.fn.setreg('/', '')
+end, { silent = true })
+
 vim.keymap.set('n', 'S', '<Plug>(cokeline-pick-focus)', { silent = true })
 vim.keymap.set('n', '<leader>x', buffers.close_hidden_buffers, { silent = true })
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-{>', buffers.close_current_buffer, { noremap = true, silent = true })
