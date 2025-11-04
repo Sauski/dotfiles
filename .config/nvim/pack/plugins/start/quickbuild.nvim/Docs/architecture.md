@@ -20,7 +20,7 @@ Neovim plugin for real-time C++ build error parsing and diagnostic display.
 
 ### 3. Config File
 `.quickbuild.json` in git root contains:
-- Sequential build commands
+- Sequential build commands (objects with `name` and `command` fields)
 - Error pattern regexes
 
 ### 4. Data Flow

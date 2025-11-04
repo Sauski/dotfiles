@@ -15,10 +15,9 @@ function M.setup(opts)
     verbose = opts.verbose or false,
   }
 
-  -- Setup statusline
+  -- Setup status messaging
   statusline.setup({
-    enabled = opts.statusline ~= false,
-    completion_duration_ms = opts.statusline_completion_duration_ms,
+    enabled = opts.status_messages ~= false,
   })
 
   -- Always register autocmd on buffer saves
@@ -111,11 +110,6 @@ end
 -- Get diagnostic namespace (for custom integrations)
 function M.get_namespace()
   return builder.get_namespace()
-end
-
--- Get statusline text
-function M.statusline()
-  return statusline.get()
 end
 
 return M

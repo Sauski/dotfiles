@@ -80,6 +80,7 @@ function M.coalesce(diagnostics)
       col = coalesced.col,
       severity = coalesced.severity,
       source = coalesced.source,
+      -- Use " | " not "\n" - newlines break fzf-lua preview/jump parser
       message = severity_prefix .. ": " .. table.concat(prefixed_messages, " | "),
     })
   end

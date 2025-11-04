@@ -41,7 +41,7 @@ Create `.quickbuild.json` in git root:
     }
   ],
   "commands": [
-    "cmake --build build"
+    {"name": "Build", "command": "cmake --build build"}
   ]
 }
 ```
@@ -99,10 +99,9 @@ Navigate diagnostics with `]d` / `[d`.
 
 ```lua
 require("quickbuild").setup({
-  scanner_path = "/custom/path",               -- Override scanner location
-  verbose = true,                               -- Show build progress
-  statusline = true,                            -- Enable statusline (default: true)
-  statusline_completion_duration_ms = 2000,    -- Show completion status duration (default: 2000)
+  scanner_path = "/custom/path",    -- Override scanner location
+  verbose = true,                    -- Show build progress
+  status_messages = true,            -- Enable status messages (default: true)
 })
 ```
 
@@ -115,21 +114,6 @@ qb.build()                          -- Trigger build
 qb.cancel()                         -- Cancel build
 qb.get_status()                     -- { is_running, stage, errors, warnings }
 qb.get_namespace()                  -- Diagnostic namespace
-qb.statusline()                     -- Get statusline text
-```
-
-## Statusline Integration
-
-```lua
--- lualine example
-require('lualine').setup({
-  sections = {
-    lualine_x = { require('quickbuild').statusline },
-  }
-})
-
--- vim statusline
-vim.opt.statusline = "%{luaeval('require(\"quickbuild\").statusline()')}"
 ```
 
 ## Commands
@@ -148,6 +132,13 @@ vim.opt.statusline = "%{luaeval('require(\"quickbuild\").statusline()')}"
 | `auto_build_on_save` | boolean | No |
 | `file_patterns` | array | If auto-build |
 | `debounce_ms` | number | No |
+
+Command format:
+```json
+{"name": "Build", "command": "cmake --build build"}
+```
+- `name`: Display name for statusline
+- `command`: Shell command to execute
 
 Pattern groups (ECMAScript regex):
 - Required: `file`, `line`, `severity`, `message`
