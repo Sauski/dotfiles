@@ -7,7 +7,7 @@ local function get_normal_bg()
   return string.format('#%06x', normal_hl.bg or 0)
 end
 
-local trans_sec = { fg = 'NONE', bg = get_normal_bg() }
+local trans_sec = { fg = 'NONE', bg = get_normal_bg(), gui = 'italic' }
 
 local trans_mode = {
   a = trans_sec,
