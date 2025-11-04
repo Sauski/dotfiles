@@ -39,7 +39,7 @@ vim.opt.expandtab = true
 vim.opt.scroll = 10
 vim.opt.scrolloff = 5
 
-vim.opt.equalalways = false
+vim.opt.equalalways = true
 
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
