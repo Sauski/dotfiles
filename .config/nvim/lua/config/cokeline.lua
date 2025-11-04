@@ -15,18 +15,32 @@ return {
   components = {
     {
       text = function(buf)
-        return require('cokeline.mappings').is_picking_focus()
-          and buf.pick_letter .. ' '
-          or ' '
+        if require('cokeline.mappings').is_picking_focus() then
+          return buf.pick_letter .. ' '
+        end
+
+        local state = require('cokeline.state')
+        local visible = state.visible_buffers
+        for i, visible_buf in ipairs(visible) do
+          if i <= 4 and visible_buf.number == buf.number then
+            return i .. '. '
+          end
+        end
+        return '   '
       end,
-      fg = '#fabd2f',
+      fg = function(buf)
+        if require('cokeline.mappings').is_picking_focus() then
+          return '#fabd2f'
+        end
+        return buf.is_focused and '#ebdbb2' or '#928374'
+      end,
       bold = function() return require('cokeline.mappings').is_picking_focus() end,
     },
     {
       text = function(buf) return buf.filename .. ' ' end,
     },
     {
-      text = function(buf) return buf.is_modified and '●' or '' end,
+      text = function(buf) return buf.is_modified and '● ' or '  ' end,
       fg = '#fb4934',
     },
   },
