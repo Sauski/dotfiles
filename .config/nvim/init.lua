@@ -7,6 +7,9 @@ vim.cmd('packloadall')
 require('options')
 require('appearance')
 
+-- Search improvements
+require('auto-hlsearch').setup()
+
 require("nvim-treesitter.install").compilers = { "clang" }
 require('nvim-treesitter.configs').setup(require('config.treesitter'))
 require('mini.indentscope').setup(require('config.indentscope'))
@@ -41,6 +44,7 @@ vim.keymap.set("n", "<leader>b", "<cmd>FzfLua buffers<cr>")
 vim.keymap.set("n", "<leader>h", "<cmd>FzfLua help_tags<cr>")
 vim.keymap.set("n", "<leader>e", "<cmd>FzfLua diagnostics_workspace<cr>")
 vim.keymap.set("n", "<leader>o", "<cmd>FzfLua oldfiles<cr>")
+vim.keymap.set("n", "<leader>l", "<cmd>FzfLua lines<cr>")
 vim.keymap.set("n", "<leader>s", "<cmd>AutoSession search<cr>")
 
 vim.keymap.set("n", "<leader>w", "<cmd>ClangFormat<cr><cmd>write<cr>")

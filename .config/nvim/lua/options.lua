@@ -1,5 +1,7 @@
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
+vim.opt.incsearch = true
+vim.opt.inccommand = 'nosplit'
 vim.opt.termguicolors = true
 vim.opt.mouse = 'a'
 vim.opt.fillchars:append({ eob = " ", vert = " " })

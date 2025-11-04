@@ -7,7 +7,7 @@ return {
   default_hl = {
     fg = function(buf) return buf.is_focused and '#ebdbb2' or '#928374' end,
     bg = function()
-      local bg = vim.api.nvim_get_hl(0, { name = 'Normal' }).bg
+      local bg = vim.api.nvim_get_hl(0, { name = 'TabLineFill' }).bg
       return bg and string.format('#%06x', bg) or '#282828'
     end,
   },

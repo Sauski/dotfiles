@@ -1,6 +1,3 @@
-frame     = "full"
+frame     = "none"
 maximized = false
 theme     = "auto"
-
-[os.windows]
-frame = "none"
