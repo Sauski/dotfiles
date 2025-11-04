@@ -35,8 +35,8 @@ local transparent_theme = {
 
 return {
   options = {
-    section_separators = '!',
-    component_separators = '|',
+    section_separators = '',
+    component_separators = '',
     theme = transparent_theme,
   },
   -- Clear out the bottom bar sections
