@@ -99,9 +99,10 @@ Navigate diagnostics with `]d` / `[d`.
 
 ```lua
 require("quickbuild").setup({
-  scanner_path = "/custom/path",    -- Override scanner location
-  verbose = true,                    -- Show build progress
-  status_messages = true,            -- Enable status messages (default: true)
+  scanner_path = "/custom/path",           -- Override scanner location
+  verbose = true,                           -- Show build progress
+  status_messages = true,                   -- Enable status messages (default: true)
+  status_completion_duration_ms = 2000,    -- Clear completion message after ms (default: 2000)
 })
 ```
 

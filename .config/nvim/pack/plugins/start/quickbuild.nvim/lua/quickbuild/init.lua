@@ -18,6 +18,7 @@ function M.setup(opts)
   -- Setup status messaging
   statusline.setup({
     enabled = opts.status_messages ~= false,
+    completion_duration_ms = opts.status_completion_duration_ms,
   })
 
   -- Always register autocmd on buffer saves

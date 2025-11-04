@@ -4,16 +4,27 @@ local M = {}
 
 local config = {
   enabled = true,
+  completion_duration_ms = 2000,
 }
+
+local clear_timer = nil
 
 function M.setup(opts)
   opts = opts or {}
   config.enabled = opts.enabled ~= false
+  config.completion_duration_ms = opts.completion_duration_ms or 2000
 end
 
 function M.set_building(stage_name)
   if not config.enabled then
     return
+  end
+
+  -- Cancel any pending clear
+  if clear_timer then
+    vim.loop.timer_stop(clear_timer)
+    clear_timer:close()
+    clear_timer = nil
   end
 
   vim.schedule(function()
@@ -26,6 +37,13 @@ function M.set_completed(success)
     return
   end
 
+  -- Cancel any pending clear
+  if clear_timer then
+    vim.loop.timer_stop(clear_timer)
+    clear_timer:close()
+    clear_timer = nil
+  end
+
   vim.schedule(function()
     if success then
       vim.cmd.echomsg('"[quickbuild] Build OK"')
@@ -35,10 +53,25 @@ function M.set_completed(success)
       vim.cmd.echohl("None")
     end
   end)
+
+  -- Clear message after duration
+  clear_timer = vim.loop.new_timer()
+  clear_timer:start(config.completion_duration_ms, 0, vim.schedule_wrap(function()
+    vim.cmd.echo('""')
+    if clear_timer then
+      clear_timer:close()
+      clear_timer = nil
+    end
+  end))
 end
 
 function M.set_idle()
-  -- No-op for command window (no persistent state to clear)
+  -- Cancel any pending clear
+  if clear_timer then
+    vim.loop.timer_stop(clear_timer)
+    clear_timer:close()
+    clear_timer = nil
+  end
 end
 
 return M
