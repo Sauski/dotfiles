@@ -3,6 +3,7 @@ return {
     filter_visible = function(buf)
       return vim.fn.bufwinnr(buf.number) <= 0
     end,
+    new_buffers_position = require('config.mru').sort_buffers,
   },
   default_hl = {
     fg = function(buf) return buf.is_focused and '#ebdbb2' or '#928374' end,

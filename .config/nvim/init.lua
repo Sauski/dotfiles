@@ -20,7 +20,14 @@ vim.opt.laststatus = 0
 require("auto-save").setup({ verbose = true })
 require("quickbuild").setup()
 
+local mru = require('config.mru')
 require('cokeline').setup(require("config.cokeline"))
+
+-- Track MRU order for buffers
+vim.api.nvim_create_autocmd('BufEnter', {
+  callback = mru.update,
+  desc = 'Update MRU buffer order',
+})
 require("auto-session").setup({
   auto_save = true,
   auto_restore = true,
@@ -64,10 +71,6 @@ vim.keymap.set('n', '<Esc>', function()
   vim.fn.setreg('/', '')
 end, { silent = true })
 
-vim.keymap.set('n', 'S', '<Plug>(cokeline-pick-focus)', { silent = true })
-vim.keymap.set('n', '<leader>x', buffers.close_hidden_buffers, { silent = true })
-vim.keymap.set({'n', 'i', 'v', 't'}, '<M-{>', buffers.close_current_buffer, { noremap = true, silent = true })
-
 vim.keymap.set('n', 'i', editing.smart_insert('i'), { expr = true, noremap = true })
 vim.keymap.set('n', 'a', editing.smart_insert('a'), { expr = true, noremap = true })
 vim.keymap.set('n', 'A', editing.smart_insert('A'), { expr = true, noremap = true })
@@ -77,10 +80,18 @@ vim.keymap.set({'n', 'i', 'v'}, '<C-u>', scrolling.scroll_up, { noremap = true, 
 vim.keymap.set('t', '<C-d>', '<Cmd>lua require("config.scrolling").scroll_down()<CR>', { noremap = true, silent = true })
 vim.keymap.set('t', '<C-u>', '<Cmd>lua require("config.scrolling").scroll_up()<CR>', { noremap = true, silent = true })
 
+-- Navigate between windows
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-]>', '<Esc><C-w>w', { noremap = true, silent = true })
 vim.keymap.set({'n', 'i', 'v', 't'}, '<M-[>', '<Esc><C-w>W', { noremap = true, silent = true })
-vim.keymap.set({'n', 'i', 'v', 't'}, '<M-}>', '<Esc><C-w>=', { noremap = true, silent = true })
-vim.keymap.set({'n', 'i', 'v', 't'}, '<M-C-PageUp>', '<Esc><cmd>vsplit<cr>', { noremap = true, silent = true })
-vim.keymap.set({'n', 'i', 'v', 't'}, '<M-C-PageDown>', '<Esc><cmd>split<cr>', { noremap = true, silent = true })
-vim.keymap.set({'n', 'i', 'v', 't'}, '<M-(>', '<Esc><C-w>5<', { noremap = true, silent = true })
-vim.keymap.set({'n', 'i', 'v', 't'}, '<M-)>', '<Esc><C-w>5>', { noremap = true, silent = true })
+
+-- Navigate between buffers
+vim.keymap.set('n', 'S', '<Plug>(cokeline-pick-focus)', { silent = true })
+
+-- Close buffers
+vim.keymap.set({'n', 'i', 'v', 't'}, '<M-)>', buffers.close_current_buffer, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>x', buffers.close_hidden_buffers, { silent = true })
+
+vim.keymap.set({'n', 'i', 'v', 't'}, '<M-C-PageUp>', function() mru.focus_nth_buffer(1) end, { noremap = true, silent = true })
+vim.keymap.set({'n', 'i', 'v', 't'}, '<M-C-PageDown>', function() mru.focus_nth_buffer(2) end, { noremap = true, silent = true })
+vim.keymap.set({'n', 'i', 'v', 't'}, '<M-{>', function() mru.focus_nth_buffer(3) end, { noremap = true, silent = true })
+vim.keymap.set({'n', 'i', 'v', 't'}, '<M-}>', function() mru.focus_nth_buffer(4) end, { noremap = true, silent = true })
