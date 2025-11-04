@@ -2,6 +2,8 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 vim.g.neovide_input_macos_option_key_is_meta = 'both'
 
+vim.g.coq_settings = require('config.coq')
+
 vim.cmd('packloadall')
 
 require('options')
