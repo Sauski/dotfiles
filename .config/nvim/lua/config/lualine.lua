@@ -7,7 +7,12 @@ local function get_normal_bg()
   return string.format('#%06x', normal_hl.bg or 0)
 end
 
-local trans_sec = { fg = 'NONE', bg = get_normal_bg(), gui = 'italic' }
+local function get_tablinefill_bg()
+  local tablinefill_hl = vim.api.nvim_get_hl(0, { name = 'TabLineFill' })
+  return string.format('#%06x', tablinefill_hl.bg or 0)
+end
+
+local trans_sec = { fg = 'NONE', bg = get_tablinefill_bg(), gui = 'italic' }
 
 local trans_mode = {
   a = trans_sec,
@@ -58,19 +63,23 @@ return {
         'filename',
         path = 4, -- Filename & Parent
         padding = { left = 1, right = 1 },
+        color = { bg = get_normal_bg(), gui = 'italic' }
       }
     },
     lualine_b = {},
     lualine_c = {
-      'diagnostics'
+      {
+        'diagnostics',
+        color = { bg = get_normal_bg(), gui = 'italic' }
+      }
     },
     lualine_x = {},
     lualine_y = {
-       build_status,
       {
         'mode',
         cond = function() return vim.fn.mode() ~= 'n' end,
-        separator = ''
+        separator = '',
+        color = { bg = get_normal_bg(), gui = 'italic' }
       },
       { function() return ' ' end }
     },
@@ -82,11 +91,15 @@ return {
         'filename',
         path = 4, -- Filename & Parent
         padding = { left = 1, right = 1 },
+        color = { bg = get_normal_bg(), gui = 'italic' }
       }
     },
     lualine_b = {},
     lualine_c = {
-      'diagnostics'
+      {
+        'diagnostics',
+        color = { bg = get_normal_bg(), gui = 'italic' }
+      }
     },
     lualine_x = {},
     lualine_y = {
