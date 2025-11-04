@@ -2,9 +2,12 @@ local function build_status()
   return require("quickbuild.statusline").get()
 end
 
--- 1. Define a single "transparent" section
--- 'NONE' tells Neovim to use the default editor background
-local trans_sec = { fg = 'NONE', bg = 'NONE' }
+local function get_normal_bg()
+  local normal_hl = vim.api.nvim_get_hl(0, { name = 'Normal' })
+  return string.format('#%06x', normal_hl.bg or 0)
+end
+
+local trans_sec = { fg = 'NONE', bg = get_normal_bg() }
 
 local trans_mode = {
   a = trans_sec,
@@ -66,7 +69,10 @@ return {
        build_status,
       {
         'mode',
-      }  
+        cond = function() return vim.fn.mode() ~= 'n' end,
+        separator = ''
+      },
+      { function() return ' ' end }
     },
     lualine_z = {}
   },
@@ -80,10 +86,12 @@ return {
     },
     lualine_b = {},
     lualine_c = {
-      'diagnostics',
+      'diagnostics'
     },
     lualine_x = {},
-    lualine_y = {},
+    lualine_y = {
+      { function() return ' ' end }
+    },
     lualine_z = {}
   }
 }
