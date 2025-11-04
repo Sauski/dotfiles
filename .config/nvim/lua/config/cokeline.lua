@@ -6,7 +6,7 @@ return {
     new_buffers_position = require('config.mru').sort_buffers,
   },
   default_hl = {
-    fg = function(buf) return buf.is_focused and '#ebdbb2' or '#928374' end,
+    fg = function(buf) return buf.is_focused and '#ebdbb2' or '#7c6f64' end,
     bg = function()
       local bg = vim.api.nvim_get_hl(0, { name = 'TabLineFill' }).bg
       return bg and string.format('#%06x', bg) or '#282828'
@@ -32,7 +32,7 @@ return {
         if require('cokeline.mappings').is_picking_focus() then
           return '#fabd2f'
         end
-        return buf.is_focused and '#ebdbb2' or '#928374'
+        return buf.is_focused and '#ebdbb2' or '#7c6f64'
       end,
       bold = function() return require('cokeline.mappings').is_picking_focus() end,
     },
