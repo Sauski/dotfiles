@@ -73,6 +73,13 @@ Hard links ensure Claude Code config is tracked in git while operational data (h
 **clang-format** - C/C++ code formatting (Chromium style)
 - `<leader>w` - Format and save
 
+**coq.nvim** - Fast autocompletion
+- `Ctrl+e` - Manual completion trigger
+- **Setup**: Run `:COQdeps` once after installation to install dependencies
+- **Local Modifications**:
+  - `coq/server/registrants/preview.py:401` - Added `preview.enabled` check to fix preview window still appearing despite `enabled = false` setting
+  - Configuration uses manual-only completions with tree-sitter source only
+
 ### Editor Features
 
 **Diagnostics**

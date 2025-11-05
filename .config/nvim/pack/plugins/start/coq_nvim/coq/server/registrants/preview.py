@@ -398,7 +398,7 @@ async def _cmp_changed(stack: Stack, event: Mapping[str, Any] = {}) -> None:
                         state=s,
                         comp=metric.comp,
                     )
-                elif metric.comp.doc and metric.comp.doc.text:
+                elif stack.settings.display.preview.enabled and metric.comp.doc and metric.comp.doc.text:
                     await _show_preview(
                         stack=stack,
                         event=ev,
