@@ -1,3 +1,0 @@
-SELECT
-  rowid
-FROM buffers
