@@ -59,7 +59,7 @@ source.complete = function(self, params, callback)
     -- print('f', flg)
     if flg and tsnds.words ~= nil then
       for _, word in ipairs(tsnds.words) do
-        if not words[word.word] and input ~= word then
+        if not words[word.word] and input ~= word.word then
           words[word.word] = true
           local w = word.word
           if #w > 25 then

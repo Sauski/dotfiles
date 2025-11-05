@@ -78,6 +78,8 @@ Hard links ensure Claude Code config is tracked in git while operational data (h
 - `Enter` - Confirm selection
 - `Esc` - Abort completion
 - Manual-only mode with tree-sitter source
+- **Local Modifications**:
+  - `cmp-treesitter/lua/cmp_treesitter/init.lua:62` - Fixed bug where current word wasn't filtered (changed `input ~= word` to `input ~= word.word`)
 
 ### Editor Features
 
