@@ -69,10 +69,6 @@ create_symlink "$DOTFILES_DIR/.config/neovide" "$NEOVIDE_TARGET" "Neovide"
 create_symlink "$DOTFILES_DIR/.config/git" "$HOME/.config/git" "Git Config"
 
 echo ""
-echo "Setting up WezTerm..."
-create_hardlink "$DOTFILES_DIR/.config/wezterm/wezterm.lua" "$HOME/.wezterm.lua" "WezTerm Config"
-
-echo ""
 echo "Setting up Claude Code config..."
 if [ ! -d "$CLAUDE_TARGET" ]; then
     mkdir -p "$CLAUDE_TARGET"
