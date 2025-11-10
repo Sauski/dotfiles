@@ -62,6 +62,9 @@ function M.group_by_file(diagnostics)
       severity = diag.severity,
       message = diag.message,
       source = diag.source,
+      user_data = {
+        filename = file,
+      },
     })
   end
 

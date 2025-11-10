@@ -16,9 +16,9 @@ local current_stage = nil
 local namespace = vim.api.nvim_create_namespace("quickbuild")
 local last_changedtick = {}  -- Track b:changedtick per buffer to detect actual changes
 
--- Find git root from current directory
-local function find_git_root()
-  local current = vim.fn.getcwd()
+-- Find git root from current directory or buffer's directory
+local function find_git_root(start_dir)
+  local current = start_dir or vim.fn.getcwd()
   local previous = ""
 
   -- Keep going up until we reach the root or stop changing
@@ -273,7 +273,17 @@ end
 local function start_build_now(opts)
   opts = opts or {}
 
-  local git_root = find_git_root()
+  -- Determine starting directory for git root search
+  local start_dir = nil
+  if opts.bufnr then
+    local bufname = vim.api.nvim_buf_get_name(opts.bufnr)
+    if bufname ~= "" then
+      start_dir = vim.fn.fnamemodify(bufname, ":h")
+    end
+  end
+
+  -- Allow overriding git root for testing
+  local git_root = opts.project_dir or find_git_root(start_dir)
   if not git_root then
     vim.notify("[quickbuild] Not in a git repository. Run 'git init' in your project root.", vim.log.levels.ERROR)
     return
@@ -516,8 +526,17 @@ function M.get_namespace()
 end
 
 -- Get project config (for init.lua to setup autocmds)
-function M.get_project_config()
-  local git_root = find_git_root()
+function M.get_project_config(bufnr)
+  -- Determine starting directory for git root search
+  local start_dir = nil
+  if bufnr then
+    local bufname = vim.api.nvim_buf_get_name(bufnr)
+    if bufname ~= "" then
+      start_dir = vim.fn.fnamemodify(bufname, ":h")
+    end
+  end
+
+  local git_root = find_git_root(start_dir)
   if not git_root then
     return nil
   end

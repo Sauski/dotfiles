@@ -62,5 +62,11 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // Flush any remaining multiline diagnostics at EOF
+    std::vector<std::string> remaining = scanner.flush();
+    for (const auto& diagnostic : remaining) {
+        std::cout << diagnostic << std::endl;
+    }
+
     return 0;
 }
