@@ -1,5 +1,0 @@
-cd ..\..\
-claude
-claude --dangerously-skip-permissions
-close
-quit
