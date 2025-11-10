@@ -37,6 +37,15 @@ int main(int argc, char* argv[]) {
     std::signal(SIGINT, signal_handler);
     std::signal(SIGTERM, signal_handler);
 
+    // Parse command-line flags
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--verbose" || arg == "-v") {
+            verbose = true;
+        }
+    }
+
     // Find git root
     auto git_root = find_git_root();
     if (!git_root) {
@@ -51,7 +60,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Create scanner
-    quickbuild::Scanner scanner(*patterns, *git_root);
+    quickbuild::Scanner scanner(*patterns, *git_root, verbose);
 
     // Process stdin line by line
     std::string line;
@@ -66,6 +75,11 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> remaining = scanner.flush();
     for (const auto& diagnostic : remaining) {
         std::cout << diagnostic << std::endl;
+    }
+
+    // Print statistics in verbose mode
+    if (verbose) {
+        scanner.print_stats();
     }
 
     return 0;

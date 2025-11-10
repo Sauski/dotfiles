@@ -11,13 +11,28 @@ namespace quickbuild {
 class Scanner {
 public:
     explicit Scanner(std::vector<Pattern> patterns,
-                     const std::filesystem::path& working_dir)
+                     const std::filesystem::path& working_dir,
+                     bool verbose = false)
         : patterns_(std::move(patterns)),
           working_dir_(working_dir),
           state_(State::IDLE),
-          active_pattern_(nullptr) {}
+          active_pattern_(nullptr),
+          verbose_(verbose),
+          lines_processed_(0),
+          single_line_attempts_(0),
+          single_line_matches_(0),
+          multiline_starts_(0),
+          multiline_completions_(0) {}
 
     std::string scan_line(const std::string& line) {
+        ++lines_processed_;
+
+        // Debug: print raw line to stderr
+        if (verbose_) {
+            std::cerr << "[DEBUG] Line " << lines_processed_ << ": "
+                      << line << std::endl;
+        }
+
         // Multiline state machine
         if (state_ == State::IDLE) {
             // Try to start multiline collection
@@ -53,6 +68,7 @@ public:
                     std::smatch match;
                     if (std::regex_search(joined, match,
                                           active_pattern_->regex)) {
+                        ++multiline_completions_;
                         results.push_back(
                             format_multiline_diagnostic(match,
                                                         *active_pattern_));
@@ -68,6 +84,19 @@ public:
         return results;
     }
 
+    void print_stats() const {
+        std::cerr << "[STATS] Lines processed: " << lines_processed_
+                  << std::endl;
+        std::cerr << "[STATS] Single-line attempts: "
+                  << single_line_attempts_ << std::endl;
+        std::cerr << "[STATS] Single-line matches: "
+                  << single_line_matches_ << std::endl;
+        std::cerr << "[STATS] Multiline starts: " << multiline_starts_
+                  << std::endl;
+        std::cerr << "[STATS] Multiline completions: "
+                  << multiline_completions_ << std::endl;
+    }
+
 private:
     enum class State { IDLE, COLLECTING };
 
@@ -80,6 +109,12 @@ private:
     State state_;
     const Pattern* active_pattern_;
     Accumulator accumulator_;
+    bool verbose_;
+    size_t lines_processed_;
+    size_t single_line_attempts_;
+    size_t single_line_matches_;
+    size_t multiline_starts_;
+    size_t multiline_completions_;
 
     bool try_start_multiline(const std::string& line) {
         for (const auto& pattern : patterns_) {
@@ -89,6 +124,11 @@ private:
             std::smatch match;
             if (std::regex_search(line, match,
                                   pattern.multiline->block_start)) {
+                ++multiline_starts_;
+                if (verbose_) {
+                    std::cerr << "[DEBUG] Multiline block started"
+                              << std::endl;
+                }
                 state_ = State::COLLECTING;
                 active_pattern_ = &pattern;
                 accumulator_.lines.clear();
@@ -100,12 +140,18 @@ private:
     }
 
     std::string try_single_line_match(const std::string& line) {
+        ++single_line_attempts_;
         for (const auto& pattern : patterns_) {
             if (pattern.multiline) {
                 continue;
             }
             std::smatch match;
             if (std::regex_match(line, match, pattern.regex)) {
+                ++single_line_matches_;
+                if (verbose_) {
+                    std::cerr << "[DEBUG] Single-line match found"
+                              << std::endl;
+                }
                 return format_diagnostic(match, pattern);
             }
         }
@@ -135,10 +181,19 @@ private:
         std::smatch match;
         if (!std::regex_search(joined, match, active_pattern_->regex)) {
             // Reset state - block complete but regex didn't match
+            if (verbose_) {
+                std::cerr << "[DEBUG] Multiline block ended but "
+                          << "regex didn't match" << std::endl;
+            }
             state_ = State::IDLE;
             active_pattern_ = nullptr;
             accumulator_.lines.clear();
             return "";
+        }
+
+        ++multiline_completions_;
+        if (verbose_) {
+            std::cerr << "[DEBUG] Multiline match found" << std::endl;
         }
 
         // Extract diagnostic from joined match

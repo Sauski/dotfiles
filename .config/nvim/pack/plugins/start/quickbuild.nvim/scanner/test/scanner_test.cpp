@@ -343,6 +343,34 @@ TEST_F(ScannerTest, MultilineIncompleteAtEOF) {
     EXPECT_TRUE(remaining.empty());
 }
 
+TEST_F(ScannerTest, VerboseModeNoOutputInNonVerbose) {
+    std::vector<quickbuild::Pattern> patterns;
+    quickbuild::Pattern p;
+    p.regex = std::regex("^(.+?):(\\d+):(\\d+): (error|warning): (.+)$");
+    p.groups = {{"file", 1}, {"line", 2}, {"col", 3},
+                {"severity", 4}, {"message", 5}};
+    patterns.push_back(p);
+
+    quickbuild::Scanner scanner(patterns, test_dir_, false);
+
+    scanner.scan_line("src/main.cpp:42:10: error: expected ';'");
+    scanner.scan_line("random line");
+}
+
+TEST_F(ScannerTest, VerboseModeEnabled) {
+    std::vector<quickbuild::Pattern> patterns;
+    quickbuild::Pattern p;
+    p.regex = std::regex("^(.+?):(\\d+):(\\d+): (error|warning): (.+)$");
+    p.groups = {{"file", 1}, {"line", 2}, {"col", 3},
+                {"severity", 4}, {"message", 5}};
+    patterns.push_back(p);
+
+    quickbuild::Scanner scanner(patterns, test_dir_, true);
+
+    scanner.scan_line("src/main.cpp:42:10: error: expected ';'");
+    scanner.scan_line("random line");
+}
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

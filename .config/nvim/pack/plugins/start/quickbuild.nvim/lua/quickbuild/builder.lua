@@ -94,14 +94,16 @@ end
 -- Execute single command with scanner (async with real-time streaming)
 -- Windows: Uses PowerShell native piping to avoid vim.system() bugs
 -- Unix: Uses temporary shell script for consistent behavior
-local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic, on_complete, verbose)
+local function execute_command(cmd, name, scanner_path, git_root,
+                               on_diagnostic, on_complete, verbose)
   local diagnostics = {}
   local has_error = false
   local is_windows = vim.loop.os_uname().sysname:find("Windows") ~= nil
 
   if verbose then
     vim.schedule(function()
-      vim.notify(string.format("[quickbuild] Running '%s': %s", name, cmd), vim.log.levels.INFO)
+      vim.notify(string.format("[quickbuild] Running '%s': %s", name, cmd),
+                 vim.log.levels.INFO)
     end)
   end
 
@@ -119,8 +121,24 @@ local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic,
 
     if data then
       vim.schedule(function()
-        if process_scanner_output(data, diagnostics, git_root, name, on_diagnostic) then
+        if process_scanner_output(data, diagnostics, git_root, name,
+                                  on_diagnostic) then
           has_error = true
+        end
+      end)
+    end
+  end
+
+  -- Stderr callback for verbose debug output
+  local function on_stderr(err, data)
+    if err then
+      return
+    end
+
+    if data and verbose then
+      vim.schedule(function()
+        for line in data:gmatch("[^\r\n]+") do
+          vim.notify("[quickbuild] " .. line, vim.log.levels.INFO)
         end
       end)
     end
@@ -129,14 +147,15 @@ local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic,
   local job
   if is_windows then
     -- Windows: PowerShell with native piping
+    local verbose_flag = verbose and " --verbose" or ""
     local ps_cmd = string.format(
-      'Set-Location "%s"; & %s 2>&1 | & "%s"',
-      git_root, cmd, scanner_path
+      'Set-Location "%s"; & %s 2>&1 | & "%s"%s',
+      git_root, cmd, scanner_path, verbose_flag
     )
 
     job = vim.system(
       {"powershell.exe", "-NoProfile", "-Command", ps_cmd},
-      {text = true, stdout = on_stdout},
+      {text = true, stdout = on_stdout, stderr = on_stderr},
       function(result)
         vim.schedule(function()
           if verbose then
@@ -166,10 +185,11 @@ local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic,
     )
   else
     -- Unix: Temporary shell script
+    local verbose_flag = verbose and " --verbose" or ""
     local script_path = vim.fn.tempname() .. ".sh"
     local script_content = string.format(
-      '#!/bin/sh\ncd "%s"\n%s 2>&1 | "%s"',
-      git_root, cmd, scanner_path
+      '#!/bin/sh\ncd "%s"\n%s 2>&1 | "%s"%s',
+      git_root, cmd, scanner_path, verbose_flag
     )
 
     vim.fn.writefile(vim.split(script_content, "\n"), script_path)
@@ -177,7 +197,7 @@ local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic,
 
     job = vim.system(
       {script_path},
-      {text = true, stdout = on_stdout},
+      {text = true, stdout = on_stdout, stderr = on_stderr},
       function(result)
         vim.schedule(function()
           vim.fn.delete(script_path)

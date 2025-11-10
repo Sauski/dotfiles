@@ -94,8 +94,9 @@ private:
             pattern.regex = std::regex(regex_str,
                                        std::regex::ECMAScript);
         } catch (const std::regex_error& e) {
-            std::cerr << "Error: Invalid regex: " << e.what()
-                      << std::endl;
+            std::cerr << "Error: Invalid regex pattern" << std::endl;
+            std::cerr << "  Pattern: " << regex_str << std::endl;
+            std::cerr << "  Reason: " << e.what() << std::endl;
             return std::nullopt;
         }
 
@@ -169,13 +170,15 @@ private:
             return std::nullopt;
         }
 
+        std::string block_start_str = obj["block_start"].get<std::string>();
         try {
-            config.block_start = std::regex(
-                obj["block_start"].get<std::string>(),
-                std::regex::ECMAScript);
+            config.block_start = std::regex(block_start_str,
+                                            std::regex::ECMAScript);
         } catch (const std::regex_error& e) {
-            std::cerr << "Error: Invalid block_start regex: "
-                      << e.what() << std::endl;
+            std::cerr << "Error: Invalid multiline block_start regex"
+                      << std::endl;
+            std::cerr << "  Pattern: " << block_start_str << std::endl;
+            std::cerr << "  Reason: " << e.what() << std::endl;
             return std::nullopt;
         }
 
@@ -191,13 +194,15 @@ private:
             return std::nullopt;
         }
 
+        std::string block_end_str = obj["block_end"].get<std::string>();
         try {
-            config.block_end = std::regex(
-                obj["block_end"].get<std::string>(),
-                std::regex::ECMAScript);
+            config.block_end = std::regex(block_end_str,
+                                          std::regex::ECMAScript);
         } catch (const std::regex_error& e) {
-            std::cerr << "Error: Invalid block_end regex: "
-                      << e.what() << std::endl;
+            std::cerr << "Error: Invalid multiline block_end regex"
+                      << std::endl;
+            std::cerr << "  Pattern: " << block_end_str << std::endl;
+            std::cerr << "  Reason: " << e.what() << std::endl;
             return std::nullopt;
         }
 
