@@ -2,14 +2,14 @@ local wezterm = require 'wezterm'
 local config = wezterm.config_builder()
 
 -- Font
-config.font = wezterm.font 'JetBrains Mono'
-config.font_size = 11.0
+config.font = wezterm.font('JetBrains Mono', { weight = 'Medium' })
+config.font_size = 12.0
 
 -- Color scheme
-config.color_scheme = 'Tokyo Night'
+config.color_scheme = 'Nord'
 
 -- Window
-config.window_background_opacity = 0.95
+config.window_decorations = "RESIZE"
 config.window_padding = { left = 2, right = 2, top = 2, bottom = 2 }
 
 -- Tab bar
@@ -17,14 +17,18 @@ config.use_fancy_tab_bar = false
 config.hide_tab_bar_if_only_one_tab = true
 
 -- Scrollback
-config.scrollback_lines = 10000
+config.scrollback_lines = 5000
 
 -- Cursor
-config.default_cursor_style = 'BlinkingBar'
-config.cursor_blink_rate = 500
+config.default_cursor_style = 'SteadyBar'
 
--- Automatically reload config
-config.automatically_reload_config = true
+-- Performance
+config.front_end = "WebGpu"
+config.max_fps = 120
+
+-- Default shell and starting directory
+config.default_prog = { 'powershell.exe' }
+config.default_cwd = 'C:\\GitHub'
 
 -- Keys
 config.keys = {
