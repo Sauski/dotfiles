@@ -31,12 +31,14 @@ if ($OriginalDotfilesDir) {
     $DOTFILES_DIR = $OriginalDotfilesDir
     $NVIM_TARGET = "$OriginalLocalAppData\nvim"
     $NEOVIDE_TARGET = "$OriginalAppData\neovide"
+    $ALACRITTY_TARGET = "$OriginalAppData\alacritty"
     $CLAUDE_TARGET = "$OriginalUserProfile\.claude"
     Write-Host "Running as administrator for user: $OriginalUser" -ForegroundColor Cyan
 } else {
     $DOTFILES_DIR = $PSScriptRoot
     $NVIM_TARGET = "$env:LOCALAPPDATA\nvim"
     $NEOVIDE_TARGET = "$env:APPDATA\neovide"
+    $ALACRITTY_TARGET = "$env:APPDATA\alacritty"
     $CLAUDE_TARGET = "$env:USERPROFILE\.claude"
 }
 
@@ -102,6 +104,7 @@ function Create-HardLink {
 Write-Host "`nCreating symlinks..." -ForegroundColor Cyan
 Create-Symlink -Source "$DOTFILES_DIR\.config\nvim" -Target $NVIM_TARGET -Name "Neovim"
 Create-Symlink -Source "$DOTFILES_DIR\.config\neovide" -Target $NEOVIDE_TARGET -Name "Neovide"
+Create-Symlink -Source "$DOTFILES_DIR\.config\alacritty" -Target $ALACRITTY_TARGET -Name "Alacritty"
 Create-Symlink -Source "$DOTFILES_DIR\.config\git" -Target "$OriginalUserProfile\.config\git" -Name "Git Config"
 
 Write-Host "`nSetting up Claude Code config..." -ForegroundColor Cyan
