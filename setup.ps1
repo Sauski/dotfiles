@@ -104,6 +104,10 @@ Create-Symlink -Source "$DOTFILES_DIR\.config\nvim" -Target $NVIM_TARGET -Name "
 Create-Symlink -Source "$DOTFILES_DIR\.config\neovide" -Target $NEOVIDE_TARGET -Name "Neovide"
 Create-Symlink -Source "$DOTFILES_DIR\.config\git" -Target "$OriginalUserProfile\.config\git" -Name "Git Config"
 
+Write-Host "`nSetting up WezTerm..." -ForegroundColor Cyan
+$WEZTERM_FILE = "$OriginalUserProfile\.wezterm.lua"
+Create-HardLink -Source "$DOTFILES_DIR\.config\wezterm\wezterm.lua" -Target $WEZTERM_FILE -Name "WezTerm Config"
+
 Write-Host "`nSetting up Claude Code config..." -ForegroundColor Cyan
 if (-not (Test-Path $CLAUDE_TARGET)) {
     New-Item -ItemType Directory -Path $CLAUDE_TARGET -Force | Out-Null

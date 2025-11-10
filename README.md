@@ -10,6 +10,7 @@ Configuration files for development environments.
     init.lua      - Main config file
     pack/         - Native Vim 8+ package management (plugins in pack/plugins/start/)
   neovide/        - Neovide GUI configuration
+  wezterm/        - WezTerm terminal configuration
 claude-config/
   CLAUDE.md       - Claude Code global instructions
   settings.local.json - Claude Code settings
@@ -32,6 +33,7 @@ Scripts create symlinks for config directories and hard links for Claude Code co
 
 - **Neovim**: `.config/nvim` → `~/.config/nvim` (symlink)
 - **Neovide**: `.config/neovide` → `~/.config/neovide` (Windows) or `~/.config/neovide` (macOS/Linux) (symlink)
+- **WezTerm**: `.config/wezterm/wezterm.lua` → `~/.wezterm.lua` (hard link)
 - **Claude Code**: `claude-config/CLAUDE.md` → `~/.claude/CLAUDE.md` (hard link)
 - **Claude Code**: `claude-config/settings.local.json` → `~/.claude/settings.local.json` (hard link)
 
