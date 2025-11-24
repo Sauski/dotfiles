@@ -20,6 +20,11 @@ vim.opt.laststatus = 0
 require("auto-save").setup({ verbose = true })
 require("quickbuild").setup()
 require('config.cmp')
+require('Comment').setup()
+
+-- Configure Comment.nvim for TLA+ files
+local ft = require('Comment.ft')
+ft.set('tla', {'\\*%s', '(*%s*)'})
 
 local mru = require('config.mru')
 require('cokeline').setup(require("config.cokeline"))
