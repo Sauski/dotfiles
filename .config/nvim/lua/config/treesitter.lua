@@ -5,4 +5,9 @@ return {
   indent = {
     enable = true,
   },
+  ensure_installed = {
+    'markdown',
+    'markdown_inline',
+    'cpp'
+  },
 }

@@ -13,6 +13,8 @@ require('auto-hlsearch').setup()
 require("nvim-treesitter.install").compilers = { "clang" }
 require('nvim-treesitter.configs').setup(require('config.treesitter'))
 require('mini.indentscope').setup(require('config.indentscope'))
+
+require('render-markdown').setup(require('config.render-markdown').config)
 require("fzf-lua").setup(require('config.fzf'))
 require("lualine").setup(require('config.lualine'))
 vim.opt.laststatus = 0
