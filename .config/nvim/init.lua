@@ -53,6 +53,9 @@ local scrolling = require('config.scrolling')
 
 vim.keymap.set({'n', 'x', 'o'}, 's', '<Plug>(leap-anywhere)')
 
+-- Make terminal more reasonable
+vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]])
+
 vim.keymap.set("n", "<leader>f", "<cmd>FzfLua files<cr>")
 vim.keymap.set("n", "<leader>g", "<cmd>FzfLua live_grep<cr>")
 vim.keymap.set("n", "<leader>b", "<cmd>FzfLua buffers<cr>")
