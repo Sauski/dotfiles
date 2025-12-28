@@ -20,7 +20,7 @@ require("lualine").setup(require('config.lualine'))
 vim.opt.laststatus = 0
 
 require("auto-save").setup({ verbose = true })
-require("quickbuild").setup()
+require("quickbuild").setup({ verbose = true})
 require('config.cmp')
 require('Comment').setup()
 

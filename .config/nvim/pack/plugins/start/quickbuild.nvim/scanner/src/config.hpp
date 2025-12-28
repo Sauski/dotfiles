@@ -11,18 +11,9 @@
 
 namespace quickbuild {
 
-struct MultilineConfig {
-    std::regex block_start;
-    std::regex block_end;
-    std::string join;
-    std::optional<std::string> severity;
-    std::vector<int> message_parts;
-};
-
 struct Pattern {
     std::regex regex;
     std::map<std::string, int> groups;
-    std::optional<MultilineConfig> multiline;
 };
 
 class Config {
@@ -80,8 +71,7 @@ private:
 
         // Extract regex
         if (!obj.contains("regex")) {
-            std::cerr << "Error: Pattern missing 'regex' field"
-                      << std::endl;
+            std::cerr << "Error: Pattern missing 'regex' field" << std::endl;
             return std::nullopt;
         }
         if (!obj["regex"].is_string()) {
@@ -91,156 +81,41 @@ private:
 
         std::string regex_str = obj["regex"].get<std::string>();
         try {
-            pattern.regex = std::regex(regex_str,
-                                       std::regex::ECMAScript);
+            pattern.regex = std::regex(regex_str, std::regex::ECMAScript);
         } catch (const std::regex_error& e) {
-            std::cerr << "Error: Invalid regex pattern" << std::endl;
-            std::cerr << "  Pattern: " << regex_str << std::endl;
-            std::cerr << "  Reason: " << e.what() << std::endl;
+            std::cerr << "Error: Invalid regex: " << e.what() << std::endl;
             return std::nullopt;
         }
 
         // Extract groups
         if (!obj.contains("groups")) {
-            std::cerr << "Error: Pattern missing 'groups' field"
-                      << std::endl;
+            std::cerr << "Error: Pattern missing 'groups' field" << std::endl;
             return std::nullopt;
         }
         if (!obj["groups"].is_object()) {
-            std::cerr << "Error: 'groups' must be an object"
-                      << std::endl;
+            std::cerr << "Error: 'groups' must be an object" << std::endl;
             return std::nullopt;
         }
 
         const auto& groups_obj = obj["groups"];
-        for (auto it = groups_obj.begin(); it != groups_obj.end();
-             ++it) {
+        for (auto it = groups_obj.begin(); it != groups_obj.end(); ++it) {
             if (!it.value().is_number_integer()) {
-                std::cerr << "Error: Group value must be an integer: "
-                          << it.key() << std::endl;
+                std::cerr << "Error: Group value must be an integer: " << it.key() << std::endl;
                 return std::nullopt;
             }
             pattern.groups[it.key()] = it.value().get<int>();
         }
 
-        // Parse optional multiline config
-        if (obj.contains("multiline")) {
-            auto ml = parse_multiline(obj["multiline"], pattern.groups);
-            if (!ml) {
-                return std::nullopt;
-            }
-            pattern.multiline = *ml;
-        }
-
         // Validate required fields
-        const std::vector<std::string> required_fields =
-            {"file", "line", "severity", "message"};
+        const std::vector<std::string> required_fields = {"file", "line", "severity", "message"};
         for (const auto& field : required_fields) {
-            bool in_groups = pattern.groups.find(field) !=
-                             pattern.groups.end();
-            bool in_multiline = pattern.multiline &&
-                                field == "severity" &&
-                                pattern.multiline->severity.has_value();
-
-            if (!in_groups && !in_multiline) {
-                std::cerr << "Error: Pattern missing required group: "
-                          << field << std::endl;
+            if (pattern.groups.find(field) == pattern.groups.end()) {
+                std::cerr << "Error: Pattern missing required group: " << field << std::endl;
                 return std::nullopt;
             }
         }
 
         return pattern;
-    }
-
-    static std::optional<MultilineConfig> parse_multiline(
-        const nlohmann::json& obj,
-        const std::map<std::string, int>& groups) {
-
-        MultilineConfig config;
-
-        // Required: block_start regex
-        if (!obj.contains("block_start")) {
-            std::cerr << "Error: Multiline missing 'block_start' field"
-                      << std::endl;
-            return std::nullopt;
-        }
-        if (!obj["block_start"].is_string()) {
-            std::cerr << "Error: Multiline 'block_start' must be string"
-                      << std::endl;
-            return std::nullopt;
-        }
-
-        std::string block_start_str = obj["block_start"].get<std::string>();
-        try {
-            config.block_start = std::regex(block_start_str,
-                                            std::regex::ECMAScript);
-        } catch (const std::regex_error& e) {
-            std::cerr << "Error: Invalid multiline block_start regex"
-                      << std::endl;
-            std::cerr << "  Pattern: " << block_start_str << std::endl;
-            std::cerr << "  Reason: " << e.what() << std::endl;
-            return std::nullopt;
-        }
-
-        // Required: block_end regex
-        if (!obj.contains("block_end")) {
-            std::cerr << "Error: Multiline missing 'block_end' field"
-                      << std::endl;
-            return std::nullopt;
-        }
-        if (!obj["block_end"].is_string()) {
-            std::cerr << "Error: Multiline 'block_end' must be string"
-                      << std::endl;
-            return std::nullopt;
-        }
-
-        std::string block_end_str = obj["block_end"].get<std::string>();
-        try {
-            config.block_end = std::regex(block_end_str,
-                                          std::regex::ECMAScript);
-        } catch (const std::regex_error& e) {
-            std::cerr << "Error: Invalid multiline block_end regex"
-                      << std::endl;
-            std::cerr << "  Pattern: " << block_end_str << std::endl;
-            std::cerr << "  Reason: " << e.what() << std::endl;
-            return std::nullopt;
-        }
-
-        // Optional: join string (default: " ")
-        config.join = obj.value("join", " ");
-
-        // Optional: severity (required if not in groups)
-        if (obj.contains("severity")) {
-            if (!obj["severity"].is_string()) {
-                std::cerr << "Error: Multiline 'severity' must be string"
-                          << std::endl;
-                return std::nullopt;
-            }
-            config.severity = obj["severity"].get<std::string>();
-        } else if (groups.find("severity") == groups.end()) {
-            std::cerr << "Error: Multiline needs 'severity' field or "
-                      << "severity in groups" << std::endl;
-            return std::nullopt;
-        }
-
-        // Optional: message_parts
-        if (obj.contains("message_parts")) {
-            if (!obj["message_parts"].is_array()) {
-                std::cerr << "Error: Multiline 'message_parts' must be "
-                          << "array" << std::endl;
-                return std::nullopt;
-            }
-            for (const auto& part : obj["message_parts"]) {
-                if (!part.is_number_integer()) {
-                    std::cerr << "Error: message_parts values must be "
-                              << "integers" << std::endl;
-                    return std::nullopt;
-                }
-                config.message_parts.push_back(part.get<int>());
-            }
-        }
-
-        return config;
     }
 };
 
