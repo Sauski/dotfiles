@@ -54,7 +54,22 @@ local scrolling = require('config.scrolling')
 vim.keymap.set({'n', 'x', 'o'}, 's', '<Plug>(leap-anywhere)')
 
 -- Make terminal more reasonable
-vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]])
+vim.keymap.set('t', '<S-Esc>', [[<C-\><C-n>]])
+vim.api.nvim_create_autocmd("TermOpen", {
+  group = vim.api.nvim_create_augroup("custom-term-setup", { clear = true }),
+  callback = function()
+    -- These options create the keymaps ONLY for the current terminal buffer
+    local opts = { buffer = 0 }
+
+    -- Pressing 'i' or 'a' in a terminal buffer will jump to the bottom and start insert
+    vim.keymap.set('n', 'i', 'G<cmd>startinsert<cr>', opts)
+    vim.keymap.set('n', 'a', 'G<cmd>startinsert<cr>', opts)
+    
+    -- Turn off line numbers in terminal buffers
+    vim.opt_local.number = false
+    vim.opt_local.relativenumber = false
+  end,
+})
 
 vim.keymap.set("n", "<leader>f", "<cmd>FzfLua files<cr>")
 vim.keymap.set("n", "<leader>g", "<cmd>FzfLua live_grep<cr>")
