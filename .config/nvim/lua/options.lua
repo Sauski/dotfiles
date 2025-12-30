@@ -53,4 +53,4 @@ else
   vim.o.guifont = "DejaVu Sans Mono:h14"
 end
 
-vim.opt.timeoutlen = 300
+vim.opt.timeoutlen = 600
