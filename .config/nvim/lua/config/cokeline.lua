@@ -54,15 +54,16 @@ return {
           return 'Terminal '
         end
 
-        local filepath = buf.path
+        local filepath = buf.path:gsub('\\', '/')
         if filepath == '' or buf.type == 'directory' then return buf.filename .. ' ' end
 
         local git_root = vim.fs.dirname(vim.fs.find('.git', { path = filepath, upward = true })[1])
+        if git_root then git_root = git_root:gsub('\\', '/') end
         local relative_path
         if git_root then
           relative_path = vim.fn.fnamemodify(filepath, ':s?' .. git_root .. '/??')
         else
-          relative_path = vim.fn.fnamemodify(filepath, ':~:.')
+          relative_path = vim.fn.fnamemodify(filepath, ':~:.'):gsub('\\', '/')
         end
 
         local parts = vim.split(relative_path, '/')
