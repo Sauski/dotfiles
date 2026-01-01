@@ -16,8 +16,10 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter', 'FileType' }, {
   pattern = '*',
   desc = 'Set custom statuscolumn',
   callback = function()
-    vim.opt_local.number = true
-    vim.opt_local.statuscolumn = '%l%=%s'
+    if vim.bo.buftype ~= 'terminal' then
+      vim.opt_local.number = true
+      vim.opt_local.statuscolumn = '%l%=%s'
+    end
   end,
 })
 
@@ -41,7 +43,7 @@ vim.opt.scrolloff = 5
 
 vim.opt.equalalways = true
 
-vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,localoptions"
 
 if vim.fn.has("win32") == 1 then
   vim.o.guifont = "Consolas:h14"
@@ -50,3 +52,5 @@ elseif vim.fn.has("macunix") == 1 then
 else
   vim.o.guifont = "DejaVu Sans Mono:h14"
 end
+
+vim.opt.timeoutlen = 600
