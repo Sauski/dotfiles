@@ -5,6 +5,25 @@ set -e
 
 echo "Setting up dotfiles..."
 
+# Check required dependencies
+echo ""
+echo "Checking dependencies..."
+missing=""
+
+if ! command -v git &> /dev/null; then
+    missing="$missing git"
+fi
+if ! command -v clang &> /dev/null; then
+    missing="$missing clang"
+fi
+
+if [ -n "$missing" ]; then
+    echo "  Missing:$missing"
+    echo "  Install before continuing."
+    exit 1
+fi
+echo "  All dependencies found"
+
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NVIM_TARGET="$HOME/.config/nvim"
 NEOVIDE_TARGET="$HOME/.config/neovide"

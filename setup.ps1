@@ -26,6 +26,25 @@ if (-not $isAdmin) {
 
 Write-Host "Setting up dotfiles..." -ForegroundColor Green
 
+# Check required dependencies
+Write-Host "`nChecking dependencies..." -ForegroundColor Cyan
+$missing = @()
+
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    $missing += "git"
+}
+if (-not (Get-Command clang -ErrorAction SilentlyContinue)) {
+    $missing += "clang"
+}
+
+if ($missing.Count -gt 0) {
+    Write-Host "  Missing: $($missing -join ', ')" -ForegroundColor Red
+    Write-Host "  Install before continuing." -ForegroundColor Red
+    Read-Host "Press Enter to exit"
+    exit 1
+}
+Write-Host "  All dependencies found" -ForegroundColor Green
+
 # Use passed parameters if running as admin, otherwise use current environment
 if ($OriginalDotfilesDir) {
     $DOTFILES_DIR = $OriginalDotfilesDir

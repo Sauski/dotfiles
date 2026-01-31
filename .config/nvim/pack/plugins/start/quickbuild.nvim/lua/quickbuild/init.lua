@@ -26,7 +26,7 @@ function M.setup(opts)
   vim.api.nvim_create_autocmd("BufWritePost", {
     callback = function(ev)
       -- Check if current project has auto-build enabled
-      local project_config = builder.get_project_config(ev.buf)
+      local project_config = builder.get_project_config()
       if not project_config or not project_config.auto_build_on_save then
         return  -- Auto-build not enabled for this project
       end

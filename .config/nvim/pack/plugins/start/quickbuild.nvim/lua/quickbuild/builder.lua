@@ -16,9 +16,9 @@ local current_stage = nil
 local namespace = vim.api.nvim_create_namespace("quickbuild")
 local last_changedtick = {}  -- Track b:changedtick per buffer to detect actual changes
 
--- Find git root from current directory or buffer's directory
-local function find_git_root(start_dir)
-  local current = start_dir or vim.fn.getcwd()
+-- Find git root from current directory
+local function find_git_root()
+  local current = vim.fn.getcwd()
   local previous = ""
 
   -- Keep going up until we reach the root or stop changing
@@ -94,16 +94,15 @@ end
 -- Execute single command with scanner (async with real-time streaming)
 -- Windows: Uses PowerShell native piping to avoid vim.system() bugs
 -- Unix: Uses temporary shell script for consistent behavior
-local function execute_command(cmd, name, scanner_path, git_root,
-                               on_diagnostic, on_complete, verbose)
+local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic, on_complete, verbose)
   local diagnostics = {}
   local has_error = false
+  local raw_output = {}
   local is_windows = vim.loop.os_uname().sysname:find("Windows") ~= nil
 
   if verbose then
     vim.schedule(function()
-      vim.notify(string.format("[quickbuild] Running '%s': %s", name, cmd),
-                 vim.log.levels.INFO)
+      vim.notify(string.format("[quickbuild] Running '%s': %s", name, cmd), vim.log.levels.INFO)
     end)
   end
 
@@ -121,36 +120,31 @@ local function execute_command(cmd, name, scanner_path, git_root,
 
     if data then
       vim.schedule(function()
-        if process_scanner_output(data, diagnostics, git_root, name,
-                                  on_diagnostic) then
+        if process_scanner_output(data, diagnostics, git_root, name, on_diagnostic) then
           has_error = true
         end
       end)
     end
   end
 
-  -- Stderr callback for verbose debug output
+  -- Stderr callback captures raw build output when scanner runs with --verbose
   local function on_stderr(err, data)
     if err then
       return
     end
-
-    if data and verbose then
-      vim.schedule(function()
-        for line in data:gmatch("[^\r\n]+") do
-          vim.notify("[quickbuild] " .. line, vim.log.levels.INFO)
-        end
-      end)
+    if data then
+      table.insert(raw_output, data)
     end
   end
+
+  local scanner_args = verbose and (scanner_path .. " --verbose") or scanner_path
 
   local job
   if is_windows then
     -- Windows: PowerShell with native piping
-    local verbose_flag = verbose and " --verbose" or ""
     local ps_cmd = string.format(
-      'Set-Location "%s"; & %s 2>&1 | & "%s"%s',
-      git_root, cmd, scanner_path, verbose_flag
+      "Set-Location '%s'; & %s 2>&1 | & %s",
+      git_root, cmd, scanner_args
     )
 
     job = vim.system(
@@ -163,18 +157,28 @@ local function execute_command(cmd, name, scanner_path, git_root,
               string.format("[quickbuild] Command completed with exit code %d: %s", result.code, cmd),
               vim.log.levels.INFO
             )
+            -- Show raw output in verbose mode
+            if #raw_output > 0 then
+              local output_str = table.concat(raw_output, "")
+              if output_str ~= "" then
+                vim.notify("[quickbuild] Raw output:\n" .. output_str, vim.log.levels.DEBUG)
+              end
+            end
           end
 
           -- Only show error if command failed AND no diagnostics were produced
           -- (diagnostics indicate the scanner is working, even if build failed)
           if result.code ~= 0 and #diagnostics == 0 then
-            vim.notify(
-              string.format(
-                "[quickbuild] Command failed with exit code %d: %s\nNo diagnostics were captured. The build may have failed before compilation.",
-                result.code, cmd
-              ),
-              vim.log.levels.WARN
+            local msg = string.format(
+              "[quickbuild] Command failed with exit code %d: %s",
+              result.code, cmd
             )
+            if #raw_output > 0 then
+              msg = msg .. "\n" .. table.concat(raw_output, "")
+            else
+              msg = msg .. "\nNo output captured. The build may have failed before compilation."
+            end
+            vim.notify(msg, vim.log.levels.WARN)
           end
 
           if on_complete then
@@ -185,11 +189,10 @@ local function execute_command(cmd, name, scanner_path, git_root,
     )
   else
     -- Unix: Temporary shell script
-    local verbose_flag = verbose and " --verbose" or ""
     local script_path = vim.fn.tempname() .. ".sh"
     local script_content = string.format(
-      '#!/bin/sh\ncd "%s"\n%s 2>&1 | "%s"%s',
-      git_root, cmd, scanner_path, verbose_flag
+      '#!/bin/sh\ncd "%s"\n%s 2>&1 | %s',
+      git_root, cmd, scanner_args
     )
 
     vim.fn.writefile(vim.split(script_content, "\n"), script_path)
@@ -206,18 +209,28 @@ local function execute_command(cmd, name, scanner_path, git_root,
               string.format("[quickbuild] Command completed with exit code %d: %s", result.code, cmd),
               vim.log.levels.INFO
             )
+            -- Show raw output in verbose mode
+            if #raw_output > 0 then
+              local output_str = table.concat(raw_output, "")
+              if output_str ~= "" then
+                vim.notify("[quickbuild] Raw output:\n" .. output_str, vim.log.levels.DEBUG)
+              end
+            end
           end
 
           -- Only show error if command failed AND no diagnostics were produced
           -- (diagnostics indicate the scanner is working, even if build failed)
           if result.code ~= 0 and #diagnostics == 0 then
-            vim.notify(
-              string.format(
-                "[quickbuild] Command failed with exit code %d: %s\nNo diagnostics were captured. The build may have failed before compilation.",
-                result.code, cmd
-              ),
-              vim.log.levels.WARN
+            local msg = string.format(
+              "[quickbuild] Command failed with exit code %d: %s",
+              result.code, cmd
             )
+            if #raw_output > 0 then
+              msg = msg .. "\n" .. table.concat(raw_output, "")
+            else
+              msg = msg .. "\nNo output captured. The build may have failed before compilation."
+            end
+            vim.notify(msg, vim.log.levels.WARN)
           end
 
           if on_complete then
@@ -293,17 +306,7 @@ end
 local function start_build_now(opts)
   opts = opts or {}
 
-  -- Determine starting directory for git root search
-  local start_dir = nil
-  if opts.bufnr then
-    local bufname = vim.api.nvim_buf_get_name(opts.bufnr)
-    if bufname ~= "" then
-      start_dir = vim.fn.fnamemodify(bufname, ":h")
-    end
-  end
-
-  -- Allow overriding git root for testing
-  local git_root = opts.project_dir or find_git_root(start_dir)
+  local git_root = find_git_root()
   if not git_root then
     vim.notify("[quickbuild] Not in a git repository. Run 'git init' in your project root.", vim.log.levels.ERROR)
     return
@@ -546,17 +549,8 @@ function M.get_namespace()
 end
 
 -- Get project config (for init.lua to setup autocmds)
-function M.get_project_config(bufnr)
-  -- Determine starting directory for git root search
-  local start_dir = nil
-  if bufnr then
-    local bufname = vim.api.nvim_buf_get_name(bufnr)
-    if bufname ~= "" then
-      start_dir = vim.fn.fnamemodify(bufname, ":h")
-    end
-  end
-
-  local git_root = find_git_root(start_dir)
+function M.get_project_config()
+  local git_root = find_git_root()
   if not git_root then
     return nil
   end

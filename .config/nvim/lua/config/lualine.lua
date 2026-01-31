@@ -29,6 +29,58 @@ local transparent_theme = {
   inactive = trans_mode,
 }
 
+local function smart_path()
+  local buf = vim.api.nvim_get_current_buf()
+  local buftype = vim.bo[buf].buftype
+  local filepath = vim.api.nvim_buf_get_name(buf)
+
+  if buftype == 'terminal' then
+    -- If user renamed the buffer with :file <name>
+    if not filepath:match("^term://") then
+      return vim.fn.fnamemodify(filepath, ":t")
+    end
+
+    -- Check for term_title (set by some apps/shells)
+    local term_title = vim.b[buf].term_title
+    if term_title and term_title ~= "" and not term_title:match("^term://") then
+      return term_title
+    end
+
+    -- Extract command from term:// host//pid:command
+    local cmd = filepath:match(":(.*)$")
+    if cmd then
+      return vim.fn.fnamemodify(cmd, ":t")
+    end
+
+    return 'Terminal'
+  end
+  
+  if filepath == '' then return '[No Name]' end
+
+  local git_root = vim.fs.dirname(vim.fs.find('.git', { path = filepath, upward = true })[1])
+  local relative_path
+  
+  if git_root then
+    relative_path = vim.fn.fnamemodify(filepath, ':s?' .. git_root .. '/??')
+  else
+    relative_path = vim.fn.fnamemodify(filepath, ':~:.')
+  end
+
+  local parts = vim.split(relative_path, '/')
+  if #parts <= 2 then
+    return relative_path
+  end
+
+  local result = {}
+  for i = 1, #parts - 2 do
+    table.insert(result, string.sub(parts[i], 1, 1))
+  end
+  table.insert(result, parts[#parts - 1])
+  table.insert(result, parts[#parts])
+
+  return table.concat(result, '/')
+end
+
 return {
   options = {
     section_separators = '',
@@ -56,8 +108,7 @@ return {
   winbar = {
     lualine_a = {
       {
-        'filename',
-        path = 4, -- Filename & Parent
+        smart_path,
         padding = { left = 1, right = 1 },
         color = { bg = get_normal_bg(), gui = 'italic' }
       }
@@ -84,8 +135,7 @@ return {
   inactive_winbar = {
     lualine_a = {
       {
-        'filename',
-        path = 4, -- Filename & Parent
+        smart_path,
         padding = { left = 1, right = 1 },
         color = { bg = get_normal_bg(), gui = 'italic' }
       }

@@ -4,6 +4,7 @@
 #include <csignal>
 #include <cstdlib>
 #include <optional>
+#include <cstring>
 #include "scanner.hpp"
 #include "config.hpp"
 
@@ -33,18 +34,17 @@ std::optional<std::filesystem::path> find_git_root() {
 }
 
 int main(int argc, char* argv[]) {
-    // Setup signal handling
-    std::signal(SIGINT, signal_handler);
-    std::signal(SIGTERM, signal_handler);
-
-    // Parse command-line flags
+    // Parse args
     bool verbose = false;
     for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if (arg == "--verbose" || arg == "-v") {
+        if (std::strcmp(argv[i], "--verbose") == 0) {
             verbose = true;
         }
     }
+
+    // Setup signal handling
+    std::signal(SIGINT, signal_handler);
+    std::signal(SIGTERM, signal_handler);
 
     // Find git root
     auto git_root = find_git_root();
@@ -60,26 +60,18 @@ int main(int argc, char* argv[]) {
     }
 
     // Create scanner
-    quickbuild::Scanner scanner(*patterns, *git_root, verbose);
+    quickbuild::Scanner scanner(*patterns, *git_root);
 
     // Process stdin line by line
     std::string line;
     while (!signal_received && std::getline(std::cin, line)) {
+        if (verbose) {
+            std::cerr << line << std::endl;
+        }
         std::string diagnostic = scanner.scan_line(line);
         if (!diagnostic.empty()) {
             std::cout << diagnostic << std::endl;
         }
-    }
-
-    // Flush any remaining multiline diagnostics at EOF
-    std::vector<std::string> remaining = scanner.flush();
-    for (const auto& diagnostic : remaining) {
-        std::cout << diagnostic << std::endl;
-    }
-
-    // Print statistics in verbose mode
-    if (verbose) {
-        scanner.print_stats();
     }
 
     return 0;
