@@ -44,7 +44,7 @@ vim.opt.equalalways = true
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
 if vim.fn.has("win32") == 1 then
-  vim.o.guifont = "Consolas:h14"
+  vim.o.guifont = "Consolas:h13"
 elseif vim.fn.has("macunix") == 1 then
   vim.o.guifont = "Menlo:h14"
 else
