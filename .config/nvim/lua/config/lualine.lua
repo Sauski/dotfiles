@@ -67,14 +67,15 @@ local function smart_path()
   end
 
   local parts = vim.split(relative_path, '/')
-  if #parts <= 2 then
+  if #parts <= 3 then
     return relative_path
   end
 
   local result = {}
-  for i = 1, #parts - 2 do
+  for i = 1, #parts - 3 do
     table.insert(result, string.sub(parts[i], 1, 1))
   end
+  table.insert(result, parts[#parts - 2])
   table.insert(result, parts[#parts - 1])
   table.insert(result, parts[#parts])
 

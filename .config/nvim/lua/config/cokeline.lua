@@ -55,10 +55,26 @@ return {
         end
 
         local filepath = buf.path:gsub('\\', '/')
-        if filepath == '' or buf.type == 'directory' then return buf.filename .. ' ' end
+        local filename = buf.filename
+        if filepath == '' or buf.type == 'directory' then
+          return filename .. ' '
+        end
 
-        local git_root = vim.fs.dirname(vim.fs.find('.git', { path = filepath, upward = true })[1])
+        local duplicate_count = 0
+        for _, b in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+          if vim.fn.fnamemodify(b.name, ":t") == filename then
+            duplicate_count = duplicate_count + 1
+          end
+        end
+
+        if duplicate_count <= 1 then
+          return filename .. ' '
+        end
+
+        local git_root_matches = vim.fs.find('.git', { path = filepath, upward = true })
+        local git_root = #git_root_matches > 0 and vim.fs.dirname(git_root_matches[1]) or nil
         if git_root then git_root = git_root:gsub('\\', '/') end
+
         local relative_path
         if git_root then
           relative_path = vim.fn.fnamemodify(filepath, ':s?' .. git_root .. '/??')
@@ -73,7 +89,11 @@ return {
 
         local result = {}
         for i = 1, #parts - 1 do
-          table.insert(result, string.sub(parts[i], 1, 1))
+          if i > #parts - 3 then
+            table.insert(result, parts[i])
+          else
+            table.insert(result, string.sub(parts[i], 1, 1))
+          end
         end
         table.insert(result, parts[#parts])
 
