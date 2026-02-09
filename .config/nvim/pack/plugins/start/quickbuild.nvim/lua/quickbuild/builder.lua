@@ -143,7 +143,7 @@ local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic,
   if is_windows then
     -- Windows: PowerShell with native piping
     local ps_cmd = string.format(
-      "Set-Location '%s'; & %s 2>&1 | & %s",
+      "Set-Location '%s'; & %s 2>&1 | & %s; exit $LASTEXITCODE",
       git_root, cmd, scanner_args
     )
 
