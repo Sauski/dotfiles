@@ -19,8 +19,8 @@ require("fzf-lua").setup(require('config.fzf'))
 require("lualine").setup(require('config.lualine'))
 vim.opt.laststatus = 0
 
-require("auto-save").setup({ verbose = true })
-require("quickbuild").setup()
+require("auto-save").setup()
+require("quickbuild").setup({ verbose = true })
 require('config.cmp')
 require('Comment').setup()
 

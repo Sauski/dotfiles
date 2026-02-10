@@ -143,7 +143,7 @@ local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic,
   if is_windows then
     -- Windows: PowerShell with native piping
     local ps_cmd = string.format(
-      "Set-Location '%s'; & %s 2>&1 | & %s; exit $LASTEXITCODE",
+      "Set-Location '%s'; & %s 2>&1 | & %s",
       git_root, cmd, scanner_args
     )
 
@@ -158,12 +158,11 @@ local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic,
               vim.log.levels.INFO
             )
             -- Show raw output in verbose mode
-            if #raw_output > 0 then
-              local output_str = table.concat(raw_output, "")
-              if output_str ~= "" then
-                vim.notify("[quickbuild] Raw output:\n" .. output_str, vim.log.levels.DEBUG)
-              end
+            local output_str = table.concat(raw_output, "")
+            if output_str == "" then
+              output_str = "(no command output)"
             end
+            vim.notify("[quickbuild] Command output:\n" .. output_str, vim.log.levels.INFO)
           end
 
           -- Only show error if command failed AND no diagnostics were produced
@@ -210,12 +209,11 @@ local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic,
               vim.log.levels.INFO
             )
             -- Show raw output in verbose mode
-            if #raw_output > 0 then
-              local output_str = table.concat(raw_output, "")
-              if output_str ~= "" then
-                vim.notify("[quickbuild] Raw output:\n" .. output_str, vim.log.levels.DEBUG)
-              end
+            local output_str = table.concat(raw_output, "")
+            if output_str == "" then
+              output_str = "(no command output)"
             end
+            vim.notify("[quickbuild] Command output:\n" .. output_str, vim.log.levels.INFO)
           end
 
           -- Only show error if command failed AND no diagnostics were produced
@@ -341,7 +339,7 @@ local function start_build_now(opts)
 
   if verbose then
     vim.notify(
-      string.format("[quickbuild] Starting build with %d command(s)", #config.commands),
+      string.format("[quickbuild] Starting build in '%s' with %d command(s)", git_root, #config.commands),
       vim.log.levels.INFO
     )
   end
