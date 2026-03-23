@@ -8,7 +8,9 @@ vim.opt.fillchars:append({ eob = " ", vert = " " })
 vim.opt.signcolumn = "yes:1"
 vim.opt_local.numberwidth = 3
 vim.opt.showmode = false
-vim.opt.laststatus = 0
+vim.opt.laststatus = 3
+vim.opt.ruler = false
+vim.opt.cmdheight = 0
 
 vim.opt_local.number = true
 vim.opt_local.statuscolumn = '%l%=%s'

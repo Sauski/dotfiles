@@ -19,7 +19,7 @@ local trans_mode = {
   z = trans_sec,
 }
 
--- 3. Create the theme by applying the transparent mode to ALL states
+-- Theme for winbar (TabLineFill background)
 local transparent_theme = {
   normal = trans_mode,
   insert = trans_mode,
@@ -27,6 +27,26 @@ local transparent_theme = {
   replace = trans_mode,
   command = trans_mode,
   inactive = trans_mode,
+}
+
+-- Theme for statusline (Normal background)
+local statusline_sec = { fg = 'NONE', bg = get_normal_bg(), gui = 'italic' }
+local statusline_mode = {
+  a = statusline_sec,
+  b = statusline_sec,
+  c = statusline_sec,
+  x = statusline_sec,
+  y = statusline_sec,
+  z = statusline_sec,
+}
+
+local statusline_theme = {
+  normal = statusline_mode,
+  insert = statusline_mode,
+  visual = statusline_mode,
+  replace = statusline_mode,
+  command = statusline_mode,
+  inactive = statusline_mode,
 }
 
 local function smart_path()
@@ -86,15 +106,30 @@ return {
   options = {
     section_separators = '',
     component_separators = '',
-    theme = transparent_theme,
+    theme = statusline_theme,
   },
-  -- Clear out the bottom bar sections
   sections = {
     lualine_a = {},
     lualine_b = {},
     lualine_c = {},
     lualine_x = {},
-    lualine_y = {},
+    lualine_y = {
+      {
+        function()
+          local ok, qb = pcall(require, "quickbuild")
+          if not ok then return "" end
+          local status = qb.get_status()
+          if status.is_running then
+            return status.stage
+          elseif status.errors > 0 or status.warnings > 0 then
+            return string.format("E:%d W:%d", status.errors, status.warnings)
+          end
+          return ""
+        end
+      },
+      'location',
+      'progress'
+    },
     lualine_z = {}
   },
   inactive_sections = {

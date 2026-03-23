@@ -17,10 +17,17 @@ require('mini.indentscope').setup(require('config.indentscope'))
 require('render-markdown').setup(require('config.render-markdown').config)
 require("fzf-lua").setup(require('config.fzf'))
 require("lualine").setup(require('config.lualine'))
-vim.opt.laststatus = 0
 
-require("auto-save").setup()
-require("quickbuild").setup({ verbose = true })
+require("auto-save").setup({
+  enabled = true,
+  execution_message = {
+    enabled = false
+  }
+})
+require("quickbuild").setup({
+  verbose = false,
+  status_messages = false
+})
 require('config.cmp')
 require('Comment').setup()
 
