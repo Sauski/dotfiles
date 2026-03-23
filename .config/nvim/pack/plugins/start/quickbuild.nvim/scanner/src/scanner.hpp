@@ -17,7 +17,7 @@ public:
         for (const auto& pattern : patterns_) {
             std::smatch match;
             if (std::regex_match(line, match, pattern.regex)) {
-                return format_diagnostic(match, pattern.groups);
+                return format_diagnostic(match, pattern);
             }
         }
         return "";
@@ -28,12 +28,16 @@ private:
     std::filesystem::path working_dir_;
 
     std::string format_diagnostic(const std::smatch& match,
-                                  const std::map<std::string, int>& groups) {
-        std::string file = extract_group(match, groups, "file");
-        std::string line = extract_group(match, groups, "line");
-        std::string col = extract_group(match, groups, "col", "0");
-        std::string severity = extract_group(match, groups, "severity");
-        std::string message = extract_group(match, groups, "message");
+                                  const Pattern& pattern) {
+        std::string severity = extract_group(match, pattern.groups, "severity");
+        std::string message = extract_group(match, pattern.groups, "message");
+
+        if (pattern.scope == Scope::PROJECT) {
+            return "PROJECT:0:0:" + severity + ":" + message;
+        }
+
+        std::string file = extract_group(match, pattern.groups, "file");
+        std::string col = extract_group(match, pattern.groups, "col", "0");
 
         // Normalize path
         std::filesystem::path file_path(file);
@@ -41,10 +45,14 @@ private:
             file_path = working_dir_ / file_path;
         }
         file_path = std::filesystem::absolute(file_path);
-
-        // Convert to forward slashes
         std::string normalized_path = file_path.generic_string();
 
+        if (pattern.scope == Scope::FILE) {
+            return normalized_path + ":0:" + col + ":" + severity + ":" + message;
+        }
+
+        // Scope::LINE
+        std::string line = extract_group(match, pattern.groups, "line");
         return normalized_path + ":" + line + ":" + col + ":" + severity + ":" + message;
     }
 

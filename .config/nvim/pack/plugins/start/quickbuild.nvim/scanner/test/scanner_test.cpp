@@ -79,6 +79,7 @@ TEST_F(ScannerTest, ScannerMatchGccFormat) {
     quickbuild::Pattern p;
     p.regex = std::regex("^(.+?):(\\d+):(\\d+): (error|warning): (.+)$");
     p.groups = {{"file", 1}, {"line", 2}, {"col", 3}, {"severity", 4}, {"message", 5}};
+    p.scope = quickbuild::Scope::LINE;
     patterns.push_back(p);
 
     quickbuild::Scanner scanner(patterns, test_dir_);
@@ -99,6 +100,7 @@ TEST_F(ScannerTest, ScannerNoMatch) {
     quickbuild::Pattern p;
     p.regex = std::regex("^(.+?):(\\d+):(\\d+): (error|warning): (.+)$");
     p.groups = {{"file", 1}, {"line", 2}, {"col", 3}, {"severity", 4}, {"message", 5}};
+    p.scope = quickbuild::Scope::LINE;
     patterns.push_back(p);
 
     quickbuild::Scanner scanner(patterns, test_dir_);
@@ -114,6 +116,7 @@ TEST_F(ScannerTest, ScannerMatchMsvcFormat) {
     quickbuild::Pattern p;
     p.regex = std::regex("^(.+?)\\((\\d+)\\): (error|warning) C\\d+: (.+)$");
     p.groups = {{"file", 1}, {"line", 2}, {"severity", 3}, {"message", 4}};
+    p.scope = quickbuild::Scope::LINE;
     patterns.push_back(p);
 
     quickbuild::Scanner scanner(patterns, test_dir_);
@@ -134,11 +137,13 @@ TEST_F(ScannerTest, ScannerMultiplePatterns) {
     quickbuild::Pattern p1;
     p1.regex = std::regex("^(.+?):(\\d+):(\\d+): (error|warning): (.+)$");
     p1.groups = {{"file", 1}, {"line", 2}, {"col", 3}, {"severity", 4}, {"message", 5}};
+    p1.scope = quickbuild::Scope::LINE;
     patterns.push_back(p1);
 
     quickbuild::Pattern p2;
     p2.regex = std::regex("^(.+?)\\((\\d+)\\): (error|warning) C\\d+: (.+)$");
     p2.groups = {{"file", 1}, {"line", 2}, {"severity", 3}, {"message", 4}};
+    p2.scope = quickbuild::Scope::LINE;
     patterns.push_back(p2);
 
     quickbuild::Scanner scanner(patterns, test_dir_);
@@ -157,6 +162,7 @@ TEST_F(ScannerTest, ScannerDefaultColValue) {
     quickbuild::Pattern p;
     p.regex = std::regex("^(.+?):(\\d+): (error|warning): (.+)$");
     p.groups = {{"file", 1}, {"line", 2}, {"severity", 3}, {"message", 4}};
+    p.scope = quickbuild::Scope::LINE;
     patterns.push_back(p);
 
     quickbuild::Scanner scanner(patterns, test_dir_);
@@ -166,6 +172,166 @@ TEST_F(ScannerTest, ScannerDefaultColValue) {
 
     EXPECT_FALSE(result.empty());
     EXPECT_NE(result.find(":42:0:"), std::string::npos);
+}
+
+TEST_F(ScannerTest, ScopeLineLevelDefault) {
+    std::vector<quickbuild::Pattern> patterns;
+    quickbuild::Pattern p;
+    p.regex = std::regex("^(.+?):(\\d+):(\\d+): (error|warning): (.+)$");
+    p.groups = {{"file", 1}, {"line", 2}, {"col", 3}, {"severity", 4}, {"message", 5}};
+    p.scope = quickbuild::Scope::LINE;
+    patterns.push_back(p);
+
+    quickbuild::Scanner scanner(patterns, test_dir_);
+
+    std::string line = "src/main.cpp:42:10: error: expected ';'";
+    std::string result = scanner.scan_line(line);
+
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result.find("src/main.cpp"), std::string::npos);
+    EXPECT_NE(result.find(":42:"), std::string::npos);
+    EXPECT_NE(result.find(":10:"), std::string::npos);
+    EXPECT_NE(result.find(":error:"), std::string::npos);
+}
+
+TEST_F(ScannerTest, ScopeFileLevel) {
+    std::vector<quickbuild::Pattern> patterns;
+    quickbuild::Pattern p;
+    p.regex = std::regex("^(.+?\\.cpp): (error|warning): (.+)$");
+    p.groups = {{"file", 1}, {"severity", 2}, {"message", 3}};
+    p.scope = quickbuild::Scope::FILE;
+    patterns.push_back(p);
+
+    quickbuild::Scanner scanner(patterns, test_dir_);
+
+    std::string line = "src/main.cpp: warning: file level issue";
+    std::string result = scanner.scan_line(line);
+
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result.find("src/main.cpp"), std::string::npos);
+    EXPECT_NE(result.find(":0:"), std::string::npos);
+    EXPECT_NE(result.find(":warning:"), std::string::npos);
+    EXPECT_NE(result.find("file level issue"), std::string::npos);
+}
+
+TEST_F(ScannerTest, ScopeProjectLevel) {
+    std::vector<quickbuild::Pattern> patterns;
+    quickbuild::Pattern p;
+    p.regex = std::regex("^LINK : (error|warning) (LNK\\d+): (.+)$");
+    p.groups = {{"severity", 1}, {"message", 3}};
+    p.scope = quickbuild::Scope::PROJECT;
+    patterns.push_back(p);
+
+    quickbuild::Scanner scanner(patterns, test_dir_);
+
+    std::string line = "LINK : error LNK2001: unresolved external symbol";
+    std::string result = scanner.scan_line(line);
+
+    EXPECT_FALSE(result.empty());
+    EXPECT_EQ(result.find("PROJECT:0:0:"), 0);
+    EXPECT_NE(result.find(":error:"), std::string::npos);
+    EXPECT_NE(result.find("unresolved external symbol"), std::string::npos);
+}
+
+TEST_F(ScannerTest, ConfigScopeLineLevel) {
+    write_config(R"({
+        "patterns": [
+            {
+                "regex": "^(.+?):(\\d+):(\\d+): (error|warning): (.+)$",
+                "groups": {"file": 1, "line": 2, "col": 3, "severity": 4, "message": 5},
+                "scope": "line"
+            }
+        ]
+    })");
+
+    auto patterns_opt = quickbuild::Config::load((test_dir_ / "test_config.json").string());
+    ASSERT_TRUE(patterns_opt.has_value());
+    auto patterns = *patterns_opt;
+    ASSERT_EQ(patterns.size(), 1);
+    EXPECT_EQ(patterns[0].scope, quickbuild::Scope::LINE);
+}
+
+TEST_F(ScannerTest, ConfigScopeFileLevel) {
+    write_config(R"({
+        "patterns": [
+            {
+                "regex": "^(.+?\\.cpp): (error|warning): (.+)$",
+                "groups": {"file": 1, "severity": 2, "message": 3},
+                "scope": "file"
+            }
+        ]
+    })");
+
+    auto patterns_opt = quickbuild::Config::load((test_dir_ / "test_config.json").string());
+    ASSERT_TRUE(patterns_opt.has_value());
+    auto patterns = *patterns_opt;
+    ASSERT_EQ(patterns.size(), 1);
+    EXPECT_EQ(patterns[0].scope, quickbuild::Scope::FILE);
+}
+
+TEST_F(ScannerTest, ConfigScopeProjectLevel) {
+    write_config(R"({
+        "patterns": [
+            {
+                "regex": "^LINK : (error|warning): (.+)$",
+                "groups": {"severity": 1, "message": 2},
+                "scope": "project"
+            }
+        ]
+    })");
+
+    auto patterns_opt = quickbuild::Config::load((test_dir_ / "test_config.json").string());
+    ASSERT_TRUE(patterns_opt.has_value());
+    auto patterns = *patterns_opt;
+    ASSERT_EQ(patterns.size(), 1);
+    EXPECT_EQ(patterns[0].scope, quickbuild::Scope::PROJECT);
+}
+
+TEST_F(ScannerTest, ConfigScopeDefaultsToLine) {
+    write_config(R"({
+        "patterns": [
+            {
+                "regex": "^(.+?):(\\d+):(\\d+): (error|warning): (.+)$",
+                "groups": {"file": 1, "line": 2, "col": 3, "severity": 4, "message": 5}
+            }
+        ]
+    })");
+
+    auto patterns_opt = quickbuild::Config::load((test_dir_ / "test_config.json").string());
+    ASSERT_TRUE(patterns_opt.has_value());
+    auto patterns = *patterns_opt;
+    ASSERT_EQ(patterns.size(), 1);
+    EXPECT_EQ(patterns[0].scope, quickbuild::Scope::LINE);
+}
+
+TEST_F(ScannerTest, ConfigFileScopeDoesNotRequireLine) {
+    write_config(R"({
+        "patterns": [
+            {
+                "regex": "^(.+?\\.cpp): (error|warning): (.+)$",
+                "groups": {"file": 1, "severity": 2, "message": 3},
+                "scope": "file"
+            }
+        ]
+    })");
+
+    auto patterns_opt = quickbuild::Config::load((test_dir_ / "test_config.json").string());
+    EXPECT_TRUE(patterns_opt.has_value());
+}
+
+TEST_F(ScannerTest, ConfigProjectScopeDoesNotRequireFileOrLine) {
+    write_config(R"({
+        "patterns": [
+            {
+                "regex": "^LINK : (error|warning): (.+)$",
+                "groups": {"severity": 1, "message": 2},
+                "scope": "project"
+            }
+        ]
+    })");
+
+    auto patterns_opt = quickbuild::Config::load((test_dir_ / "test_config.json").string());
+    EXPECT_TRUE(patterns_opt.has_value());
 }
 
 int main(int argc, char **argv) {

@@ -11,9 +11,16 @@
 
 namespace quickbuild {
 
+enum class Scope {
+    LINE,
+    FILE,
+    PROJECT
+};
+
 struct Pattern {
     std::regex regex;
     std::map<std::string, int> groups;
+    Scope scope;
 };
 
 class Config {
@@ -87,6 +94,27 @@ private:
             return std::nullopt;
         }
 
+        // Extract scope (default: line-level)
+        pattern.scope = Scope::LINE;
+        if (obj.contains("scope")) {
+            if (!obj["scope"].is_string()) {
+                std::cerr << "Error: 'scope' must be a string" << std::endl;
+                return std::nullopt;
+            }
+            std::string scope_str = obj["scope"].get<std::string>();
+            if (scope_str == "line") {
+                pattern.scope = Scope::LINE;
+            } else if (scope_str == "file") {
+                pattern.scope = Scope::FILE;
+            } else if (scope_str == "project") {
+                pattern.scope = Scope::PROJECT;
+            } else {
+                std::cerr << "Error: Invalid scope '" << scope_str
+                          << "' (must be 'line', 'file', or 'project')" << std::endl;
+                return std::nullopt;
+            }
+        }
+
         // Extract groups
         if (!obj.contains("groups")) {
             std::cerr << "Error: Pattern missing 'groups' field" << std::endl;
@@ -106,8 +134,16 @@ private:
             pattern.groups[it.key()] = it.value().get<int>();
         }
 
-        // Validate required fields
-        const std::vector<std::string> required_fields = {"file", "line", "severity", "message"};
+        // Validate required fields based on scope
+        std::vector<std::string> required_fields;
+        if (pattern.scope == Scope::LINE) {
+            required_fields = {"file", "line", "severity", "message"};
+        } else if (pattern.scope == Scope::FILE) {
+            required_fields = {"file", "severity", "message"};
+        } else if (pattern.scope == Scope::PROJECT) {
+            required_fields = {"severity", "message"};
+        }
+
         for (const auto& field : required_fields) {
             if (pattern.groups.find(field) == pattern.groups.end()) {
                 std::cerr << "Error: Pattern missing required group: " << field << std::endl;
