@@ -4,6 +4,7 @@ return {
   },
   indent = {
     enable = true,
+    disable = { 'cpp', 'c' },
   },
   ensure_installed = {
     'markdown',

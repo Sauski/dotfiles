@@ -67,11 +67,29 @@ cmp.setup({
       end
     end, { 'i', 'c' }),
     ['<C-q>'] = cmp.mapping.complete(),
-    ['<CR>'] = cmp.mapping.confirm({ select = true }),
+    ['<CR>'] = cmp.mapping(function(fallback)
+      if cmp.visible() then
+        cmp.confirm({ select = true })
+      else
+        fallback()
+      end
+    end, { 'i', 'c' }),
     ['<Esc>'] = cmp.mapping.abort(),
   },
   sources = cmp.config.sources({
     { name = 'treesitter' },
+    {
+      name = 'buffer',
+      option = {
+        keyword_length = 3,
+        keyword_pattern = [[\k\+]],
+        get_bufnrs = function()
+          return vim.api.nvim_list_bufs()
+        end,
+        indexing_interval = 200,
+        max_indexed_line_length = 40960,
+      }
+    },
   }),
   experimental = {
     ghost_text = true,
