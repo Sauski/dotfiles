@@ -12,6 +12,15 @@ require('auto-hlsearch').setup()
 
 require("nvim-treesitter.install").compilers = { "clang" }
 require('nvim-treesitter.configs').setup(require('config.treesitter'))
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = { 'cpp', 'c' },
+  callback = function()
+    vim.schedule(function()
+      vim.b.did_indent = nil
+      vim.cmd('runtime! indent/' .. vim.bo.filetype .. '.vim')
+    end)
+  end,
+})
 require('mini.indentscope').setup(require('config.indentscope'))
 
 require('render-markdown').setup(require('config.render-markdown').config)
