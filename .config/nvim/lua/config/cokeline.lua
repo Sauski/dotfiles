@@ -16,7 +16,7 @@ return {
     {
       text = function(buf)
         if require('cokeline.mappings').is_picking_focus() then
-          return buf.pick_letter .. ' '
+          return buf.pick_letter .. '  '
         end
 
         local state = require('cokeline.state')
