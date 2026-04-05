@@ -37,7 +37,7 @@ require("quickbuild").setup({
   verbose = false,
   status_messages = false
 })
-require('config.cmp')
+require('blink.cmp').setup(require('config.blink'))
 require('Comment').setup()
 
 -- Configure Comment.nvim for TLA+ files
