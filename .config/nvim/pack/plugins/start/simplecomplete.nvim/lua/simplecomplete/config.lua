@@ -6,6 +6,9 @@ M.defaults = {
   -- Minimum keyword length to trigger completion
   min_keyword_length = 2,
 
+  -- Minimum number of changes (new chars + case diffs) to show indicator
+  min_completion_changes = 1,
+
   -- Debounce time in milliseconds before triggering completion
   debounce_ms = 20,
 

@@ -12,6 +12,8 @@ local config = nil
 -- Completion state
 local state = {
   completion_text = nil,
+  lcp = nil,           -- Full LCP (for case correction)
+  keyword = nil,       -- Original keyword typed
   bufnr = nil,
   line_nr = nil,
   col = nil,
@@ -57,18 +59,37 @@ local function do_completion()
   local words = cache.get_all_words(bufnrs, config)
   local matches = matcher.find_matches(keyword, words, config)
 
-  local completion = matcher.get_unambiguous_completion(keyword, matches)
-
-  if completion then
-    indicator.show(bufnr, line_nr, col)
-    state.completion_text = completion
-    state.bufnr = bufnr
-    state.line_nr = line_nr
-    state.col = col
-  else
-    indicator.hide(bufnr)
-    state.completion_text = nil
+  -- Get LCP for counting changes
+  local lcp = nil
+  if #matches > 0 then
+    lcp = matcher.longest_common_prefix(matches)
   end
+
+  -- Count total changes (new chars + case diffs)
+  local total_changes = 0
+  if lcp then
+    total_changes = matcher.count_completion_changes(keyword, lcp)
+  end
+
+  -- Only show indicator if changes meet threshold
+  if lcp and total_changes >= config.min_completion_changes then
+    local completion = matcher.get_unambiguous_completion(keyword, matches)
+    if completion then
+      indicator.show(bufnr, line_nr, col)
+      state.completion_text = completion
+      state.lcp = lcp
+      state.keyword = keyword
+      state.bufnr = bufnr
+      state.line_nr = line_nr
+      state.col = col
+      return
+    end
+  end
+
+  indicator.hide(bufnr)
+  state.completion_text = nil
+  state.lcp = nil
+  state.keyword = nil
 end
 
 -- Schedule completion with debouncing
@@ -116,21 +137,26 @@ local function on_insert_leave()
 
   insert_state = {}
   state.completion_text = nil
+  state.lcp = nil
+  state.keyword = nil
 
   cache.invalidate(bufnr)
 end
 
 -- Accept LCP completion (for expr mapping - returns text to insert)
 function M.accept_completion()
-  if not state.completion_text then
+  if not state.completion_text or not state.lcp or not state.keyword then
     return nil
   end
 
-  local text = state.completion_text
+  local lcp = state.lcp
+  local keyword = state.keyword
   local bufnr = state.bufnr
 
   -- Clear state
   state.completion_text = nil
+  state.lcp = nil
+  state.keyword = nil
   indicator.hide(bufnr)
 
   -- Schedule recomputation after insertion
@@ -138,7 +164,10 @@ function M.accept_completion()
     schedule_completion()
   end)
 
-  return text
+  -- Return key sequence: backspaces to delete keyword, then LCP with correct case
+  -- Use \b (backspace character) which works in key sequences
+  local backspaces = string.rep("\b", #keyword)
+  return backspaces .. lcp
 end
 
 -- Get matches for menu

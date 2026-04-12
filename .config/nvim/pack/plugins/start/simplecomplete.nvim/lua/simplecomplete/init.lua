@@ -14,6 +14,7 @@ function M.setup(opts)
   M.config = vim.tbl_deep_extend('force', config_module.defaults, opts or {})
 
   indicator.setup()
+  menu.setup(M.config)
   trigger.setup(M.config)
 
   vim.keymap.set('i', M.config.keymap.accept, function()
@@ -46,10 +47,7 @@ function M.setup(opts)
   })
 
   vim.keymap.set('i', M.config.keymap.menu, function()
-    local matches, keyword = trigger.get_matches_for_menu()
-    if matches and #matches > 0 then
-      menu.show(matches)
-    end
+    menu.show()
   end, {
     noremap = true,
     silent = true,

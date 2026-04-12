@@ -39,6 +39,7 @@ require("quickbuild").setup({
 })
 require('simplecomplete').setup({
   min_keyword_length = 2,
+  min_completion_changes = 3,
   debounce_ms = 20,
   sources = {
     buffers = 'all',

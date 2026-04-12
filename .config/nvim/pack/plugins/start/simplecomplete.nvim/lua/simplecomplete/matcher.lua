@@ -115,6 +115,29 @@ function M.longest_common_prefix(words)
   return prefix
 end
 
+-- Count total changes between typed keyword and LCP
+-- Returns: number of new chars + number of case differences
+function M.count_completion_changes(typed_keyword, lcp)
+  if not lcp or #lcp == 0 then
+    return 0
+  end
+
+  -- Count case differences in overlapping portion
+  local overlap_len = math.min(#typed_keyword, #lcp)
+  local case_diffs = 0
+
+  for i = 1, overlap_len do
+    if typed_keyword:sub(i, i) ~= lcp:sub(i, i) then
+      case_diffs = case_diffs + 1
+    end
+  end
+
+  -- Count new characters added
+  local new_chars = math.max(0, #lcp - #typed_keyword)
+
+  return case_diffs + new_chars
+end
+
 -- Get unambiguous completion text based on LCP
 function M.get_unambiguous_completion(typed_keyword, matches)
   if #matches == 0 then return nil end
