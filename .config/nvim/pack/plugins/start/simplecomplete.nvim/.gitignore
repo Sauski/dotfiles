@@ -1,0 +1,14 @@
+# Lua
+*.luac
+
+# Editor
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Testing
+.tests/
+
+# Cache
+*.log

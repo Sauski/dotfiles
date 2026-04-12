@@ -37,7 +37,17 @@ require("quickbuild").setup({
   verbose = false,
   status_messages = false
 })
-require('blink.cmp').setup(require('config.blink'))
+require('simplecomplete').setup({
+  min_keyword_length = 2,
+  debounce_ms = 20,
+  sources = {
+    buffers = 'all',
+  },
+  keymap = {
+    accept = '<CR>',
+    menu = '<S-CR>',
+  },
+})
 require('Comment').setup()
 
 -- Configure Comment.nvim for TLA+ files

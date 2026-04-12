@@ -37,6 +37,9 @@
 --   )
 local function create_family_extractor(file_patterns, dir_patterns_to_strip)
   return function(filepath)
+    -- Normalize Windows path separators to forward slashes
+    filepath = filepath:gsub("\\", "/")
+
     -- Try each pattern to extract basename (order matters - longest first)
     local basename = nil
     for _, pattern in ipairs(file_patterns) do
@@ -50,11 +53,23 @@ local function create_family_extractor(file_patterns, dir_patterns_to_strip)
 
     -- Extract base directory by removing common subdirectory patterns
     local base_dir = basename
-    for _, strip_pattern in ipairs(dir_patterns_to_strip or {}) do
-      local stripped = basename:match(strip_pattern)
-      if stripped then
-        base_dir = stripped
-        break
+    for _, strip_config in ipairs(dir_patterns_to_strip or {}) do
+      if type(strip_config) == "table" then
+        local matches = { basename:match(strip_config.pattern) }
+        if #matches > 0 then
+          base_dir = matches[strip_config.base_idx]
+          local name_part = matches[strip_config.name_idx]
+          basename = base_dir .. "/" .. name_part
+          break
+        end
+      else
+        -- Legacy string pattern support
+        local stripped = basename:match(strip_config)
+        if stripped then
+          base_dir = stripped
+          basename = stripped
+          break
+        end
       end
     end
 
@@ -63,7 +78,13 @@ local function create_family_extractor(file_patterns, dir_patterns_to_strip)
       base_dir = basename:match("(.*)/") or ""
     end
 
-    return { basename, base_dir }
+    -- Make basename relative to base_dir for use in subdirectory targets
+    local relative_name = basename
+    if base_dir ~= "" then
+      relative_name = basename:match("^" .. base_dir:gsub("([^%w])", "%%%1") .. "/(.*)$") or basename:match("([^/]+)$") or basename
+    end
+
+    return { basename, base_dir, relative_name }
   end
 end
 
@@ -75,13 +96,15 @@ local cpp_file_patterns = {
   "(.*)_unittest%.cc$",
   "(.*)_impl%.cpp$",
   "(.*)_impl%.cc$",
+  "(.*)Test%.cpp$",
   "(.*)%.cpp$",
   "(.*)%.cc$",
   "(.*)%.h$",
 }
 
 local cpp_dir_strips = {
-  "(.*)/tests?/",  -- Remove /test or /tests from path
+  { pattern = "(.*)/Private/Tests/(.*)", base_idx = 1, name_idx = 2 },  -- Remove /Private/Tests from path
+  { pattern = "(.*)/tests?/(.*)", base_idx = 1, name_idx = 2 },  -- Remove /test or /tests from path
 }
 
 -- ========================================
@@ -103,8 +126,8 @@ local web_file_patterns = {
 }
 
 local web_dir_strips = {
-  "(.*)/tests?/",
-  "(.*)/spec/",
+  { pattern = "(.*)/tests?/(.*)", base_idx = 1, name_idx = 2 },
+  { pattern = "(.*)/spec/(.*)", base_idx = 1, name_idx = 2 },
 }
 
 local config = {
@@ -123,10 +146,11 @@ local config = {
         { target = "%1_unittest.cc", context = "unittest_same" },
         { target = "%1_browsertest.cc", context = "browsertest_same" },
         -- Alternative locations in tests/ subdirectory
-        { target = "%2/tests/%1_unittest.cc", context = "unittest_subdir" },
-        { target = "%2/tests/%1_browsertest.cc", context = "browsertest_subdir" },
-        { target = "%2/test/%1_unittest.cc", context = "unittest_subdir2" },
-        { target = "%2/test/%1_browsertest.cc", context = "browsertest_subdir2" },
+        { target = "%2/tests/%3_unittest.cc", context = "unittest_subdir" },
+        { target = "%2/tests/%3_browsertest.cc", context = "browsertest_subdir" },
+        { target = "%2/test/%3_unittest.cc", context = "unittest_subdir2" },
+        { target = "%2/test/%3_browsertest.cc", context = "browsertest_subdir2" },
+        { target = "%2/Private/Tests/%3Test.cpp", context = "test_private" },
       },
     },
 
