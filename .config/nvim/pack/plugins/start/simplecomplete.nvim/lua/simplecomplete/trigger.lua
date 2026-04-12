@@ -12,7 +12,6 @@ local config = nil
 -- Completion state
 local state = {
   completion_text = nil,
-  keyword = nil,
   bufnr = nil,
   line_nr = nil,
   col = nil,
@@ -63,14 +62,12 @@ local function do_completion()
   if completion then
     indicator.show(bufnr, line_nr, col)
     state.completion_text = completion
-    state.keyword = keyword
     state.bufnr = bufnr
     state.line_nr = line_nr
     state.col = col
   else
     indicator.hide(bufnr)
     state.completion_text = nil
-    state.keyword = nil
   end
 end
 
@@ -119,44 +116,29 @@ local function on_insert_leave()
 
   insert_state = {}
   state.completion_text = nil
-  state.keyword = nil
 
   cache.invalidate(bufnr)
 end
 
--- Accept LCP completion (modifies buffer directly)
+-- Accept LCP completion (for expr mapping - returns text to insert)
 function M.accept_completion()
   if not state.completion_text then
-    return false
+    return nil
   end
 
-  local keyword = state.keyword
-  local full_word = state.completion_text
+  local text = state.completion_text
   local bufnr = state.bufnr
-  local line_nr = state.line_nr
-  local col = state.col
 
-  -- Clear state first
+  -- Clear state
   state.completion_text = nil
-  state.keyword = nil
   indicator.hide(bufnr)
-
-  -- Delete typed keyword and insert full word with correct case
-  local row = line_nr - 1
-  local start_col = col - #keyword
-
-  vim.api.nvim_buf_set_text(bufnr, row, start_col, row, col, {full_word})
-
-  -- Move cursor to end of inserted word
-  local new_col = start_col + #full_word
-  vim.api.nvim_win_set_cursor(0, {line_nr, new_col})
 
   -- Schedule recomputation after insertion
   vim.schedule(function()
     schedule_completion()
   end)
 
-  return true
+  return text
 end
 
 -- Get matches for menu

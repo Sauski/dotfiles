@@ -121,17 +121,15 @@ function M.get_unambiguous_completion(typed_keyword, matches)
 
   local lcp = M.longest_common_prefix(matches)
 
+  if #lcp <= #typed_keyword then
+    return nil
+  end
+
   if lcp:lower():sub(1, #typed_keyword) ~= typed_keyword:lower() then
     return nil
   end
 
-  -- Show completion if LCP is longer OR has different case
-  if #lcp <= #typed_keyword and lcp == typed_keyword then
-    return nil
-  end
-
-  -- Return the FULL word with original case
-  return lcp
+  return lcp:sub(#typed_keyword + 1)
 end
 
 return M

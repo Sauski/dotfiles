@@ -23,22 +23,23 @@ function M.setup(opts)
       local info = vim.fn.complete_info({'selected'})
       if info.selected == -1 then
         -- Nothing selected, select first item then accept
-        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-n><C-y>', true, false, true), 'n', false)
+        return vim.api.nvim_replace_termcodes('<C-n><C-y>', true, false, true)
       else
         -- Something selected, just accept it
-        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-y>', true, false, true), 'n', false)
+        return vim.api.nvim_replace_termcodes('<C-y>', true, false, true)
       end
-      return
     end
 
     -- Otherwise try LCP completion
-    if trigger.accept_completion() then
-      return
+    local completion_text = trigger.accept_completion()
+    if completion_text then
+      return completion_text
     end
 
     -- No completion, normal newline
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(M.config.keymap.accept, true, false, true), 'n', false)
+    return vim.api.nvim_replace_termcodes(M.config.keymap.accept, true, false, true)
   end, {
+    expr = true,
     noremap = true,
     silent = true,
     desc = 'Accept completion from menu or LCP, or insert newline',
