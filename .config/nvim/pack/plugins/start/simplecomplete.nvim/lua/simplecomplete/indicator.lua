@@ -37,9 +37,13 @@ end
 
 -- Setup highlight group
 function M.setup()
+  -- Get Comment color from theme
+  local comment_hl = vim.api.nvim_get_hl(0, {name = 'Comment'})
+  local comment_color = comment_hl.fg or '#808080'
+
   vim.api.nvim_set_hl(0, 'SimplecompleteIndicator', {
     underline = true,
-    sp = '#4a9eff',
+    sp = string.format('#%06x', comment_color),
   })
 end
 
