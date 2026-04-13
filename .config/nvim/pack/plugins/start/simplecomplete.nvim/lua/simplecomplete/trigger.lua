@@ -71,8 +71,11 @@ local function do_completion()
     total_changes = matcher.count_completion_changes(keyword, lcp)
   end
 
-  -- Only show indicator if changes meet threshold
-  if lcp and total_changes >= config.min_completion_changes then
+  -- Show indicator: initial trigger needs min_completion_changes, but persist while changes >= 0
+  local had_completion = state.completion_text ~= nil
+  local should_show = (total_changes >= config.min_completion_changes) or (had_completion and total_changes >= 0)
+
+  if lcp and should_show then
     local completion = matcher.get_unambiguous_completion(keyword, matches)
     if completion then
       indicator.show(bufnr, line_nr, col)

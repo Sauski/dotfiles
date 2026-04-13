@@ -77,4 +77,33 @@ describe('matcher', function()
     assert.is_false(matcher.is_mid_word('test ', 4))
     assert.is_false(matcher.is_mid_word('test', 4))
   end)
+
+  it('counts completion changes correctly', function()
+    -- New chars only
+    assert.equals(4, matcher.count_completion_changes('func', 'function'))
+    assert.equals(1, matcher.count_completion_changes('functio', 'function'))
+    assert.equals(0, matcher.count_completion_changes('function', 'function'))
+
+    -- Case differences
+    assert.equals(1, matcher.count_completion_changes('Func', 'func'))
+
+    -- New chars + case diffs
+    assert.equals(5, matcher.count_completion_changes('Func', 'function'))
+  end)
+
+  it('returns empty string when keyword equals LCP', function()
+    local matches = {'function'}
+    local completion = matcher.get_unambiguous_completion('function', matches)
+
+    -- Should return empty string (truthy), not nil
+    assert.is_not_nil(completion)
+    assert.equals('', completion)
+  end)
+
+  it('returns completion text when keyword is prefix of LCP', function()
+    local matches = {'function'}
+    local completion = matcher.get_unambiguous_completion('func', matches)
+
+    assert.equals('tion', completion)
+  end)
 end)

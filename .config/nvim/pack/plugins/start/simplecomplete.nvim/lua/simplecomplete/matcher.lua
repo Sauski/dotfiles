@@ -144,7 +144,7 @@ function M.get_unambiguous_completion(typed_keyword, matches)
 
   local lcp = M.longest_common_prefix(matches)
 
-  if #lcp <= #typed_keyword then
+  if #lcp < #typed_keyword then
     return nil
   end
 

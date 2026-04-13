@@ -17,14 +17,23 @@ function M.show(bufnr, line_nr, col)
     return
   end
 
-  -- Underline the last character before cursor (col-1 in 0-indexed)
-  local highlight_col = col - 1
-  if highlight_col < 0 or highlight_col >= #line then
+  -- Find start of keyword by scanning backwards from cursor
+  local start_col = col - 1  -- 0-indexed position before cursor
+  while start_col > 0 do
+    local char = line:sub(start_col, start_col)
+    if not char:match('[%w_]') then
+      break
+    end
+    start_col = start_col - 1
+  end
+
+  -- Highlight from keyword start to cursor
+  if start_col < 0 or start_col >= col then
     return
   end
 
-  vim.api.nvim_buf_set_extmark(bufnr, ns_id, line_nr - 1, highlight_col, {
-    end_col = highlight_col + 1,
+  vim.api.nvim_buf_set_extmark(bufnr, ns_id, line_nr - 1, start_col, {
+    end_col = col,
     hl_group = 'SimplecompleteIndicator',
     priority = 200,
   })
