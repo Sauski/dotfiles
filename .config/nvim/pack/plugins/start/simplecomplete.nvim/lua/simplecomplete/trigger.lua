@@ -49,14 +49,34 @@ local function do_completion()
     return
   end
 
-  if matcher.is_mid_word(line, col) then
-    indicator.hide(bufnr)
-    state.completion_text = nil
-    return
+  -- Merge words from insert-start snapshot with live cache from other buffers
+  local bufnrs = cache.get_buffer_list(config)
+  local words = {}
+  local word_set = {}
+
+  -- Use insert-start snapshot for current buffer (preserves original words)
+  if insert_state.bufnr == bufnr and insert_state.words then
+    for _, word in ipairs(insert_state.words) do
+      if not word_set[word] then
+        word_set[word] = true
+        table.insert(words, word)
+      end
+    end
   end
 
-  local bufnrs = cache.get_buffer_list(config)
-  local words = cache.get_all_words(bufnrs, config)
+  -- Use live cache for other buffers (and current buffer if no snapshot)
+  for _, buf in ipairs(bufnrs) do
+    if buf ~= bufnr or not insert_state.words then
+      local buf_words = cache.get_words(buf, config)
+      for _, word in ipairs(buf_words) do
+        if not word_set[word] then
+          word_set[word] = true
+          table.insert(words, word)
+        end
+      end
+    end
+  end
+
   local matches = matcher.find_matches(keyword, words, config)
 
   -- Get LCP for counting changes
@@ -120,11 +140,15 @@ local function on_insert_enter()
   local col = cursor[2]
   local line = vim.api.nvim_get_current_line()
 
+  -- Capture word snapshot from current buffer to preserve original words
+  local words = cache.get_words(bufnr, config)
+
   insert_state = {
     bufnr = bufnr,
     line_nr = line_nr,
     col = col,
     keyword = matcher.get_keyword(line, col),
+    words = words,  -- Snapshot of words before typing
   }
 end
 
@@ -138,7 +162,7 @@ local function on_insert_leave()
     timer = nil
   end
 
-  insert_state = {}
+  insert_state = {}  -- Clears words snapshot
   state.completion_text = nil
   state.lcp = nil
   state.keyword = nil
@@ -186,8 +210,34 @@ function M.get_matches_for_menu()
     return nil, nil
   end
 
+  -- Merge words from insert-start snapshot with live cache from other buffers
   local bufnrs = cache.get_buffer_list(config)
-  local words = cache.get_all_words(bufnrs, config)
+  local words = {}
+  local word_set = {}
+
+  -- Use insert-start snapshot for current buffer (preserves original words)
+  if insert_state.bufnr == bufnr and insert_state.words then
+    for _, word in ipairs(insert_state.words) do
+      if not word_set[word] then
+        word_set[word] = true
+        table.insert(words, word)
+      end
+    end
+  end
+
+  -- Use live cache for other buffers (and current buffer if no snapshot)
+  for _, buf in ipairs(bufnrs) do
+    if buf ~= bufnr or not insert_state.words then
+      local buf_words = cache.get_words(buf, config)
+      for _, word in ipairs(buf_words) do
+        if not word_set[word] then
+          word_set[word] = true
+          table.insert(words, word)
+        end
+      end
+    end
+  end
+
   local matches = matcher.find_matches(keyword, words, config)
 
   return matches, keyword

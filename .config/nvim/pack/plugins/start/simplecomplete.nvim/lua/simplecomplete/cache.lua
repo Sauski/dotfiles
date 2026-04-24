@@ -8,8 +8,40 @@ local word_regex = vim.regex([[\<\w\{4,}\>]])
 -- Get a hash of buffer content for change detection
 local function buffer_hash(bufnr)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  local hash = vim.fn.sha256(table.concat(lines, '\n'))
-  return tostring(hash)
+
+  -- Defensive: ensure all lines are strings
+  local string_lines = {}
+  for i, line in ipairs(lines) do
+    if type(line) == 'string' then
+      string_lines[i] = line
+    else
+      -- Convert non-string lines (blobs, etc.) to string
+      string_lines[i] = tostring(line)
+    end
+  end
+
+  local content = table.concat(string_lines, '\n')
+
+  -- Defensive: ensure content is a string before sha256
+  if type(content) ~= 'string' then
+    content = tostring(content)
+  end
+
+  local hash = vim.fn.sha256(content)
+
+  -- Handle both string (older Neovim) and blob (newer Neovim) return types
+  if type(hash) == 'string' then
+    return hash
+  else
+    -- Convert blob to byte array, then to hex string
+    -- blob2list() returns array of integers (byte values)
+    local bytes = vim.fn.blob2list(hash)
+    local parts = {}
+    for _, byte in ipairs(bytes) do
+      parts[#parts + 1] = string.format('%02x', byte)
+    end
+    return table.concat(parts)
+  end
 end
 
 -- Extract words from buffer content
