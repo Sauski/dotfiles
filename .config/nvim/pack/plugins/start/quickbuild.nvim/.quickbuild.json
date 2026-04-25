@@ -2,11 +2,33 @@
   "patterns": [
     {
       "regex": "^(.+?):(\\d+):(\\d+): (error|warning|note): (.+)$",
-      "groups": {"file": 1, "line": 2, "col": 3, "severity": 4, "message": 5}
+      "groups": {"file": 1, "line": 2, "col": 3, "severity": 4, "message": 5},
+      "scope": "line"
     },
     {
       "regex": "^(.+?)\\((\\d+),(\\d+)\\): (error|warning) C\\d+: (.+)$",
-      "groups": {"file": 1, "line": 2, "col": 3, "severity": 4, "message": 5}
+      "groups": {"file": 1, "line": 2, "col": 3, "severity": 4, "message": 5},
+      "scope": "line"
+    },
+    {
+      "regex": "^.+?\\.obj : (?:fatal )?(error|warning) (LNK\\d+): (.+)$",
+      "groups": {"severity": 1, "message": 3},
+      "scope": "project"
+    },
+    {
+      "regex": "^LINK : (?:fatal )?(error|warning) (LNK\\d+): (.+)$",
+      "groups": {"severity": 1, "message": 3},
+      "scope": "project"
+    },
+    {
+      "regex": "^/usr/bin/ld: (error|warning): (.+)$",
+      "groups": {"severity": 1, "message": 2},
+      "scope": "project"
+    },
+    {
+      "regex": "^ld: (error|warning): (.+)$",
+      "groups": {"severity": 1, "message": 2},
+      "scope": "project"
     }
   ],
   "commands": [

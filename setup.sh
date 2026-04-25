@@ -27,6 +27,7 @@ echo "  All dependencies found"
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NVIM_TARGET="$HOME/.config/nvim"
 NEOVIDE_TARGET="$HOME/.config/neovide"
+WEZTERM_TARGET="$HOME/.config/wezterm"
 CLAUDE_TARGET="$HOME/.claude"
 
 create_symlink() {
@@ -85,6 +86,7 @@ echo ""
 echo "Creating symlinks..."
 create_symlink "$DOTFILES_DIR/.config/nvim" "$NVIM_TARGET" "Neovim"
 create_symlink "$DOTFILES_DIR/.config/neovide" "$NEOVIDE_TARGET" "Neovide"
+create_symlink "$DOTFILES_DIR/.config/wezterm" "$WEZTERM_TARGET" "WezTerm"
 create_symlink "$DOTFILES_DIR/.config/git" "$HOME/.config/git" "Git Config"
 
 echo ""

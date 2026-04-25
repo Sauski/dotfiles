@@ -13,6 +13,7 @@ local error_count = 0
 local warning_count = 0
 local cancel_count = 0
 local current_stage = nil
+local last_build_success = nil  -- nil = no build run, true = success, false = failure
 local namespace = vim.api.nvim_create_namespace("quickbuild")
 local last_changedtick = {}  -- Track b:changedtick per buffer to detect actual changes
 
@@ -165,9 +166,10 @@ local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic,
             vim.notify("[quickbuild] Command output:\n" .. output_str, vim.log.levels.INFO)
           end
 
-          -- Only show error if command failed AND no diagnostics were produced
+          -- Only show error in verbose mode if command failed AND no diagnostics were produced
           -- (diagnostics indicate the scanner is working, even if build failed)
-          if result.code ~= 0 and #diagnostics == 0 then
+          -- Error state is tracked in error_count and shown in lualine
+          if verbose and result.code ~= 0 and #diagnostics == 0 then
             local msg = string.format(
               "[quickbuild] Command failed with exit code %d: %s",
               result.code, cmd
@@ -216,9 +218,10 @@ local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic,
             vim.notify("[quickbuild] Command output:\n" .. output_str, vim.log.levels.INFO)
           end
 
-          -- Only show error if command failed AND no diagnostics were produced
+          -- Only show error in verbose mode if command failed AND no diagnostics were produced
           -- (diagnostics indicate the scanner is working, even if build failed)
-          if result.code ~= 0 and #diagnostics == 0 then
+          -- Error state is tracked in error_count and shown in lualine
+          if verbose and result.code ~= 0 and #diagnostics == 0 then
             local msg = string.format(
               "[quickbuild] Command failed with exit code %d: %s",
               result.code, cmd
@@ -251,6 +254,7 @@ local function execute_sequential(commands, scanner_path, git_root, on_complete,
     if current_index > #commands then
       -- All commands completed
       current_stage = nil
+      last_build_success = true
       statusline.set_completed(true)
       if on_complete then
         on_complete(all_diagnostics, false)
@@ -282,6 +286,7 @@ local function execute_sequential(commands, scanner_path, git_root, on_complete,
         -- Stop on first error
         if has_error or exit_code ~= 0 then
           current_stage = nil
+          last_build_success = false
           statusline.set_completed(false)
           if on_complete then
             on_complete(all_diagnostics, true)
@@ -531,6 +536,7 @@ function M.get_status()
     stage = current_stage,
     errors = error_count,
     warnings = warning_count,
+    last_success = last_build_success,
   }
 end
 

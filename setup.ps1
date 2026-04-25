@@ -5,8 +5,32 @@ param(
     [string]$OriginalLocalAppData,
     [string]$OriginalAppData,
     [string]$OriginalDotfilesDir,
-    [string]$OriginalUserProfile
+    [string]$OriginalUserProfile,
+    [switch]$DepsChecked
 )
+
+Write-Host "Setting up dotfiles..." -ForegroundColor Green
+
+# Check required dependencies
+if (-not $DepsChecked) {
+    Write-Host "`nChecking dependencies..." -ForegroundColor Cyan
+    $missing = @()
+
+    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+        $missing += "git"
+    }
+    if (-not (Get-Command clang -ErrorAction SilentlyContinue)) {
+        $missing += "clang"
+    }
+
+    if ($missing.Count -gt 0) {
+        Write-Host "  Missing: $($missing -join ', ')" -ForegroundColor Red
+        Write-Host "  Install before continuing." -ForegroundColor Red
+        Read-Host "Press Enter to exit"
+        exit 1
+    }
+    Write-Host "  All dependencies found" -ForegroundColor Green
+}
 
 # Check if running as administrator
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -20,30 +44,9 @@ if (-not $isAdmin) {
     $currentDotfilesDir = $PSScriptRoot
     $currentUserProfile = $env:USERPROFILE
 
-    Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -OriginalUser `"$currentUser`" -OriginalLocalAppData `"$currentLocalAppData`" -OriginalAppData `"$currentAppData`" -OriginalDotfilesDir `"$currentDotfilesDir`" -OriginalUserProfile `"$currentUserProfile`""
+    Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -OriginalUser `"$currentUser`" -OriginalLocalAppData `"$currentLocalAppData`" -OriginalAppData `"$currentAppData`" -OriginalDotfilesDir `"$currentDotfilesDir`" -OriginalUserProfile `"$currentUserProfile`" -DepsChecked"
     exit
 }
-
-Write-Host "Setting up dotfiles..." -ForegroundColor Green
-
-# Check required dependencies
-Write-Host "`nChecking dependencies..." -ForegroundColor Cyan
-$missing = @()
-
-if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-    $missing += "git"
-}
-if (-not (Get-Command clang -ErrorAction SilentlyContinue)) {
-    $missing += "clang"
-}
-
-if ($missing.Count -gt 0) {
-    Write-Host "  Missing: $($missing -join ', ')" -ForegroundColor Red
-    Write-Host "  Install before continuing." -ForegroundColor Red
-    Read-Host "Press Enter to exit"
-    exit 1
-}
-Write-Host "  All dependencies found" -ForegroundColor Green
 
 # Use passed parameters if running as admin, otherwise use current environment
 if ($OriginalDotfilesDir) {
@@ -51,6 +54,7 @@ if ($OriginalDotfilesDir) {
     $NVIM_TARGET = "$OriginalLocalAppData\nvim"
     $NEOVIDE_TARGET = "$OriginalAppData\neovide"
     $ALACRITTY_TARGET = "$OriginalAppData\alacritty"
+    $WEZTERM_TARGET = "$OriginalUserProfile\.config\wezterm"
     $CLAUDE_TARGET = "$OriginalUserProfile\.claude"
     Write-Host "Running as administrator for user: $OriginalUser" -ForegroundColor Cyan
 } else {
@@ -58,6 +62,7 @@ if ($OriginalDotfilesDir) {
     $NVIM_TARGET = "$env:LOCALAPPDATA\nvim"
     $NEOVIDE_TARGET = "$env:APPDATA\neovide"
     $ALACRITTY_TARGET = "$env:APPDATA\alacritty"
+    $WEZTERM_TARGET = "$env:USERPROFILE\.config\wezterm"
     $CLAUDE_TARGET = "$env:USERPROFILE\.claude"
 }
 
@@ -124,6 +129,7 @@ Write-Host "`nCreating symlinks..." -ForegroundColor Cyan
 Create-Symlink -Source "$DOTFILES_DIR\.config\nvim" -Target $NVIM_TARGET -Name "Neovim"
 Create-Symlink -Source "$DOTFILES_DIR\.config\neovide" -Target $NEOVIDE_TARGET -Name "Neovide"
 Create-Symlink -Source "$DOTFILES_DIR\.config\alacritty" -Target $ALACRITTY_TARGET -Name "Alacritty"
+Create-Symlink -Source "$DOTFILES_DIR\.config\wezterm" -Target $WEZTERM_TARGET -Name "WezTerm"
 Create-Symlink -Source "$DOTFILES_DIR\.config\git" -Target "$OriginalUserProfile\.config\git" -Name "Git Config"
 
 Write-Host "`nSetting up Claude Code config..." -ForegroundColor Cyan
