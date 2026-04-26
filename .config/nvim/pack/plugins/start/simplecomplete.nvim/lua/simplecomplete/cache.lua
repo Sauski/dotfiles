@@ -47,7 +47,19 @@ end
 -- Extract words from buffer content
 local function extract_words(bufnr, config)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  local text = table.concat(lines, '\n')
+
+  -- Defensive: ensure all lines are strings
+  local string_lines = {}
+  for i, line in ipairs(lines) do
+    if type(line) == 'string' then
+      string_lines[i] = line
+    else
+      -- Convert non-string lines (blobs, etc.) to string
+      string_lines[i] = tostring(line)
+    end
+  end
+
+  local text = table.concat(string_lines, '\n')
 
   -- Check buffer size limit
   if #text > config.sources.max_buffer_size then
