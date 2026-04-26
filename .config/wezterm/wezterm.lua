@@ -87,6 +87,9 @@ config.keys = {
   { key = 's', mods = 'CTRL|SHIFT', action = act.SplitVertical { domain = 'CurrentPaneDomain' } },
   { key = 'v', mods = 'CTRL|SHIFT', action = act.SplitHorizontal { domain = 'CurrentPaneDomain' } },
 
+  -- New tab (Ctrl+Shift+t)
+  { key = 't', mods = 'CTRL|SHIFT', action = act.SpawnTab 'CurrentPaneDomain' },
+
   -- Close current pane
   { key = 'c', mods = 'CTRL|SHIFT', action = act.CloseCurrentPane { confirm = true } },
 
