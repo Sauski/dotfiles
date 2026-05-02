@@ -27,6 +27,9 @@ local function buffer_hash(bufnr)
     content = tostring(content)
   end
 
+  -- Remove null bytes that cause sha256 blob/string errors
+  content = content:gsub('%z', '')
+
   local hash = vim.fn.sha256(content)
 
   -- Handle both string (older Neovim) and blob (newer Neovim) return types
@@ -60,6 +63,9 @@ local function extract_words(bufnr, config)
   end
 
   local text = table.concat(string_lines, '\n')
+
+  -- Remove null bytes that interfere with regex matching
+  text = text:gsub('%z', '')
 
   -- Check buffer size limit
   if #text > config.sources.max_buffer_size then
