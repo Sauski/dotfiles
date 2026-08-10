@@ -55,6 +55,8 @@ require('Comment').setup()
 local ft = require('Comment.ft')
 ft.set('tla', {'\\*%s', '(*%s*)'})
 
+require('gitsigns').setup(require('config.gitsigns'))
+
 local mru = require('config.mru')
 require('cokeline').setup(require("config.cokeline"))
 
@@ -108,6 +110,12 @@ vim.keymap.set("n", "<leader>o", "<cmd>FzfLua oldfiles<cr>")
 vim.keymap.set("n", "<leader>l", "<cmd>FzfLua lines<cr>")
 vim.keymap.set("n", "<leader>s", "<cmd>AutoSession search<cr>")
 
+vim.keymap.set("n", "<leader>vf", "<cmd>FzfLua git_status<cr>")
+vim.keymap.set("n", "<leader>v1f", function() require('fzf-lua').git_diff({ ref = 'HEAD~1' }) end)
+vim.keymap.set("n", "<leader>v2f", function() require('fzf-lua').git_diff({ ref = 'HEAD~2' }) end)
+vim.keymap.set("n", "<leader>v3f", function() require('fzf-lua').git_diff({ ref = 'HEAD~3' }) end)
+vim.keymap.set("n", "<leader>vuf", function() require('fzf-lua').git_diff({ ref = '@{u}' }) end)
+
 vim.keymap.set("n", "<leader>w", "<cmd>ClangFormat<cr><cmd>write<cr>")
 
 vim.keymap.set("n", "<leader>r", other.open_other_in_other_window)
@@ -124,6 +132,13 @@ vim.keymap.set('n', '<Esc>', function()
   vim.cmd('nohlsearch')
   vim.fn.setreg('/', '')
 end, { silent = true })
+
+-- Keep the unnamed register clear of small deletes and visual pastes
+vim.keymap.set({'n', 'x'}, 'x', '"_x', { noremap = true })
+vim.keymap.set({'n', 'x'}, 'c', '"_c', { noremap = true })
+vim.keymap.set('n', 'C', '"_C', { noremap = true })
+vim.keymap.set('x', 'p', 'P', { noremap = true })
+vim.keymap.set('x', 'P', 'p', { noremap = true })
 
 vim.keymap.set('n', 'i', editing.smart_insert('i'), { expr = true, noremap = true })
 vim.keymap.set('n', 'a', editing.smart_insert('a'), { expr = true, noremap = true })

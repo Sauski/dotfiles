@@ -5,6 +5,9 @@ return {
     end,
     new_buffers_position = require('config.mru').sort_buffers,
   },
+  rendering = {
+    slider = require('cokeline.sliders').left_bias,
+  },
   default_hl = {
     fg = function(buf) return buf.is_focused and '#ebdbb2' or '#7c6f64' end,
     bg = function()

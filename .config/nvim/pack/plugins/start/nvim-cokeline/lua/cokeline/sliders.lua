@@ -72,7 +72,15 @@ end
 --   return left, right
 -- end
 
+local left_bias = function(
+  available_space,
+  width_left_of_current,
+  width_right_of_current
+)
+  return width_left_of_current, available_space - width_left_of_current
+end
+
 return {
   center_current_buffer = center_current_buffer,
-  -- slide_if_needed = slide_if_needed,
+  left_bias = left_bias,
 }
