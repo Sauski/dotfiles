@@ -91,6 +91,29 @@ describe('matcher', function()
     assert.equals(5, matcher.count_completion_changes('Func', 'function'))
   end)
 
+  it('cases LCP like the closest-cased match', function()
+    -- Typed case kept while a match still agrees with it
+    assert.equals('match', matcher.longest_common_prefix('mat', {'Match', 'match_longer'}))
+    assert.equals('match', matcher.longest_common_prefix('mat', {'match_longer', 'Match'}))
+    assert.equals('Match', matcher.longest_common_prefix('Mat', {'match_longer', 'Match'}))
+    assert.equals('match', matcher.longest_common_prefix('mat', {'maTCHbar', 'matchFoo'}))
+
+    -- No match agrees with typed case: corrected
+    assert.equals('Match', matcher.longest_common_prefix('mat', {'Match', 'MatchFoo'}))
+    assert.equals('MATCH', matcher.longest_common_prefix('mAT', {'Match', 'MATCH_X'}))
+
+    -- Ties keep list order
+    assert.equals('matCH_', matcher.longest_common_prefix('mat', {'matCH_a', 'match_b'}))
+    assert.equals('maTch', matcher.longest_common_prefix('mat', {'maTch', 'mAtch'}))
+  end)
+
+  it('keeps typed case on accept when a match agrees', function()
+    local matches = {'Match', 'match_longer'}
+
+    assert.equals(0, matcher.count_completion_changes('match', matcher.longest_common_prefix('match', matches)))
+    assert.equals('ch', matcher.get_unambiguous_completion('mat', matches))
+  end)
+
   it('returns empty string when keyword equals LCP', function()
     local matches = {'function'}
     local completion = matcher.get_unambiguous_completion('function', matches)

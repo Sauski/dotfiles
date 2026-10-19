@@ -82,7 +82,7 @@ local function do_completion()
   -- Get LCP for counting changes
   local lcp = nil
   if #matches > 0 then
-    lcp = matcher.longest_common_prefix(matches)
+    lcp = matcher.longest_common_prefix(keyword, matches)
   end
 
   -- Count total changes (new chars + case diffs)

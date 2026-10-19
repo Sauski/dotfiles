@@ -88,15 +88,38 @@ function M.get_completion_text(keyword, match)
   return match:sub(#keyword + 1)
 end
 
--- Calculate longest common prefix across all words (case-insensitive)
-function M.longest_common_prefix(words)
-  if #words == 0 then return "" end
-  if #words == 1 then return words[1] end
+-- Count case differences between keyword and the start of word
+local function count_case_diffs(keyword, word)
+  local diffs = 0
 
-  local prefix = words[1]
+  for i = 1, math.min(#keyword, #word) do
+    if keyword:sub(i, i) ~= word:sub(i, i) then
+      diffs = diffs + 1
+    end
+  end
+
+  return diffs
+end
+
+-- Calculate longest common prefix across all words (case-insensitive),
+-- cased like the word with fewest case differences from keyword
+function M.longest_common_prefix(keyword, words)
+  if #words == 0 then return "" end
+
+  local cased = words[1]
+  local cased_diffs = count_case_diffs(keyword, cased)
 
   for i = 2, #words do
-    local word = words[i]
+    local diffs = count_case_diffs(keyword, words[i])
+    if diffs < cased_diffs then
+      cased = words[i]
+      cased_diffs = diffs
+    end
+  end
+
+  local prefix = cased
+
+  for _, word in ipairs(words) do
     local len = math.min(#prefix, #word)
     local common_len = 0
 
@@ -122,27 +145,16 @@ function M.count_completion_changes(typed_keyword, lcp)
     return 0
   end
 
-  -- Count case differences in overlapping portion
-  local overlap_len = math.min(#typed_keyword, #lcp)
-  local case_diffs = 0
-
-  for i = 1, overlap_len do
-    if typed_keyword:sub(i, i) ~= lcp:sub(i, i) then
-      case_diffs = case_diffs + 1
-    end
-  end
-
-  -- Count new characters added
   local new_chars = math.max(0, #lcp - #typed_keyword)
 
-  return case_diffs + new_chars
+  return count_case_diffs(typed_keyword, lcp) + new_chars
 end
 
 -- Get unambiguous completion text based on LCP
 function M.get_unambiguous_completion(typed_keyword, matches)
   if #matches == 0 then return nil end
 
-  local lcp = M.longest_common_prefix(matches)
+  local lcp = M.longest_common_prefix(typed_keyword, matches)
 
   if #lcp < #typed_keyword then
     return nil
