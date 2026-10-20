@@ -137,4 +137,61 @@ function M.clear(namespace)
   vim.diagnostic.reset(namespace)
 end
 
+-- Move a buffer's diagnostics into the stale namespace
+function M.mark_stale(bufnr, namespace, stale_namespace)
+  local current = vim.diagnostic.get(bufnr, { namespace = namespace })
+  if #current == 0 then
+    return
+  end
+
+  local stale = vim.diagnostic.get(bufnr, { namespace = stale_namespace })
+  vim.list_extend(stale, current)
+  vim.diagnostic.set(stale_namespace, bufnr, stale, {})
+  vim.diagnostic.reset(namespace, bufnr)
+end
+
+local stale_sign_hl = {
+  [vim.diagnostic.severity.ERROR] = "QuickbuildStaleError",
+  [vim.diagnostic.severity.WARN] = "QuickbuildStaleWarn",
+  [vim.diagnostic.severity.INFO] = "DiagnosticSignInfo",
+  [vim.diagnostic.severity.HINT] = "DiagnosticSignHint",
+}
+
+-- Define stale highlight groups (re-run on ColorScheme)
+function M.define_stale_highlights()
+  vim.api.nvim_set_hl(0, "QuickbuildStaleError", { fg = "#ff8c00", default = true })
+  vim.api.nvim_set_hl(0, "QuickbuildStaleWarn", { fg = "#f0e68c", default = true })
+end
+
+-- Register sign handler for the stale namespace (built-in signs use fixed DiagnosticSign* colors)
+function M.setup_stale(stale_namespace)
+  local sign_namespace = vim.api.nvim_create_namespace("quickbuild_stale_signs")
+
+  -- Registered handlers run for every namespace, so both callbacks filter on stale_namespace
+  vim.diagnostic.handlers.quickbuild_stale = {
+    show = function(namespace, bufnr, diagnostics)
+      -- Unloaded buffers are not clamped to their line count (matches built-in signs)
+      if namespace ~= stale_namespace or not vim.api.nvim_buf_is_loaded(bufnr) then
+        return
+      end
+      vim.api.nvim_buf_clear_namespace(bufnr, sign_namespace, 0, -1)
+      for _, diag in ipairs(diagnostics) do
+        vim.api.nvim_buf_set_extmark(bufnr, sign_namespace, diag.lnum, 0, {
+          sign_text = vim.diagnostic.severity[diag.severity]:sub(1, 1),
+          sign_hl_group = stale_sign_hl[diag.severity],
+          priority = 10,
+        })
+      end
+    end,
+    hide = function(namespace, bufnr)
+      if namespace == stale_namespace and vim.api.nvim_buf_is_valid(bufnr) then
+        vim.api.nvim_buf_clear_namespace(bufnr, sign_namespace, 0, -1)
+      end
+    end,
+  }
+
+  vim.diagnostic.config({ signs = false, underline = false }, stale_namespace)
+  M.define_stale_highlights()
+end
+
 return M

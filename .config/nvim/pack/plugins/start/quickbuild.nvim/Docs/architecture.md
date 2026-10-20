@@ -51,7 +51,8 @@ Cross-platform via:
 
 1. **std::regex**: C++17 standard library, no dependencies
 2. **No fallbacks**: Missing scanner or config = error
-3. **Line-buffered**: Diagnostics appear during build
+3. **Publish on completion**: A build that runs to the end (pass or fail) replaces all diagnostics; a killed build changes nothing
 4. **Single config**: Commands + patterns in `.quickbuild.json`
 5. **Git root**: Always use git root as project root
 6. **Location-based coalescing**: Multi-line errors merged by file:line:col
+7. **Stale diagnostics**: Editing a buffer moves its diagnostics to the `quickbuild_stale` namespace, drawn by a custom sign handler, until the next completed build

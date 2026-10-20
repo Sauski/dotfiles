@@ -95,6 +95,10 @@ Navigate diagnostics with `]d` / `[d`.
 }
 ```
 
+## Stale Diagnostics
+
+Editing a buffer marks its diagnostics stale. Stale signs use `QuickbuildStaleError` (orange) and `QuickbuildStaleWarn` (pale yellow); override them in your colorscheme. The next build that runs to the end replaces all diagnostics. Cancelled builds change nothing.
+
 ## Options
 
 ```lua
@@ -115,6 +119,7 @@ qb.build()                          -- Trigger build
 qb.cancel()                         -- Cancel build
 qb.get_status()                     -- { is_running, stage, errors, warnings }
 qb.get_namespace()                  -- Diagnostic namespace
+qb.get_stale_namespace()            -- Stale diagnostic namespace
 ```
 
 ## Commands

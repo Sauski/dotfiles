@@ -189,19 +189,14 @@ describe("E2E build", function()
 
     -- Assert each diagnostic has required fields for fzf preview
     for i, diag in ipairs(all_diagnostics) do
-      assert.is_not_nil(diag.filename, string.format("Diagnostic %d missing filename field", i))
       assert.is_not_nil(diag.source, string.format("Diagnostic %d missing source field", i))
       assert.is_not_nil(diag.lnum, string.format("Diagnostic %d missing lnum field", i))
       assert.is_not_nil(diag.message, string.format("Diagnostic %d missing message field", i))
 
-      -- Assert buffer name matches filename (critical for fzf preview on Windows)
+      -- Assert buffer name is absolute with forward slashes (scanner output format, critical for fzf preview on Windows)
       local bufname = vim.api.nvim_buf_get_name(diag.bufnr)
-      assert.equals(diag.filename, bufname,
-        string.format("Diagnostic %d: bufname doesn't match filename. This breaks fzf preview.", i))
-
-      -- Assert filename is absolute path with forward slashes (scanner output format)
-      assert.is_true(diag.filename:match("^[A-Za-z]:/") ~= nil or diag.filename:match("^/") ~= nil,
-        string.format("Diagnostic %d: filename should be absolute with forward slashes: %s", i, diag.filename))
+      assert.is_true(bufname:match("^[A-Za-z]:/") ~= nil or bufname:match("^/") ~= nil,
+        string.format("Diagnostic %d: bufname should be absolute with forward slashes: %s", i, bufname))
     end
   end)
 
@@ -393,11 +388,8 @@ describe("E2E build", function()
       string.format("Final build should have diagnostics, got %d", #last_diagnostics))
   end)
 
-  it("statusline shows stage names during build", function()
-    if not check_dependencies() then
-      return
-    end
-
+  -- Build broken project with status messages, returning :messages output
+  local function build_with_messages(status_messages)
     local test_project = original_cwd .. "/tests/fixtures/broken_project"
     vim.cmd("cd " .. test_project)
 
@@ -414,77 +406,10 @@ describe("E2E build", function()
 
     require("quickbuild").setup({
       scanner_path = scanner_path,
-      statusline = true,
+      status_messages = status_messages,
     })
 
-    local stages_seen = {}
-    local done = false
-
-    -- Poll statusline during build
-    local poll_timer = vim.loop.new_timer()
-    poll_timer:start(0, 50, vim.schedule_wrap(function()
-      local status_text = require("quickbuild").statusline()
-      if status_text and status_text ~= "" then
-        table.insert(stages_seen, status_text)
-      end
-    end))
-
-    require("quickbuild").build({
-      scanner_path = scanner_path,
-      on_complete = function(diags, err)
-        done = true
-      end
-    })
-
-    local completed = vim.wait(30000, function()
-      return done
-    end, 100)
-
-    poll_timer:stop()
-    poll_timer:close()
-
-    assert.is_true(completed, "Build should have completed")
-
-    -- Check we saw stage names
-    local saw_configure = false
-    local saw_build = false
-    for _, status in ipairs(stages_seen) do
-      if status:match("Configure") then
-        saw_configure = true
-      end
-      if status:match("Build") then
-        saw_build = true
-      end
-    end
-
-    assert.is_true(saw_configure, "Should have seen Configure stage in statusline")
-    assert.is_true(saw_build, "Should have seen Build stage in statusline")
-  end)
-
-  it("statusline shows Build Failed on error", function()
-    if not check_dependencies() then
-      return
-    end
-
-    local test_project = original_cwd .. "/tests/fixtures/broken_project"
-    vim.cmd("cd " .. test_project)
-
-    local scanner_path
-    local is_windows = vim.loop.os_uname().sysname:find("Windows") ~= nil
-
-    if is_windows then
-      scanner_path = original_cwd .. "/scanner/build/Release/qb-scanner.exe"
-    else
-      scanner_path = original_cwd .. "/scanner/build/qb-scanner"
-    end
-
-    assert.equals(1, vim.fn.executable(scanner_path), "Scanner binary not found at: " .. scanner_path)
-
-    require("quickbuild").setup({
-      scanner_path = scanner_path,
-      statusline = true,
-    })
-
+    vim.cmd("messages clear")
     local done = false
 
     require("quickbuild").build({
@@ -500,12 +425,40 @@ describe("E2E build", function()
 
     assert.is_true(completed, "Build should have completed")
 
-    -- Check statusline shows failure
-    local status_text = require("quickbuild").statusline()
-    assert.equals("Build Failed", status_text)
+    -- Status messages are echoed via vim.schedule
+    vim.wait(100, function() return false end)
+    return vim.fn.execute("messages")
+  end
+
+  it("status messages show stage names during build", function()
+    if not check_dependencies() then
+      return
+    end
+
+    local messages = build_with_messages(true)
+    assert.is_true(messages:find("[quickbuild] Building: Configure", 1, true) ~= nil, "Should show Configure stage: " .. messages)
+    assert.is_true(messages:find("[quickbuild] Building: Build", 1, true) ~= nil, "Should show Build stage: " .. messages)
   end)
 
-  it("statusline returns to idle after completion duration", function()
+  it("status messages show Build Failed on error", function()
+    if not check_dependencies() then
+      return
+    end
+
+    local messages = build_with_messages(true)
+    assert.is_true(messages:find("[quickbuild] Build Failed", 1, true) ~= nil, "Should show Build Failed: " .. messages)
+  end)
+
+  it("status messages disabled when configured", function()
+    if not check_dependencies() then
+      return
+    end
+
+    local messages = build_with_messages(false)
+    assert.is_nil(messages:find("[quickbuild]", 1, true), "Should show no status messages: " .. messages)
+  end)
+
+  it("cancelled build shows no Build Failed", function()
     if not check_dependencies() then
       return
     end
@@ -526,128 +479,26 @@ describe("E2E build", function()
 
     require("quickbuild").setup({
       scanner_path = scanner_path,
-      statusline = true,
-      statusline_completion_duration_ms = 500,
-    })
-
-    local done = false
-
-    require("quickbuild").build({
-      scanner_path = scanner_path,
-      on_complete = function(diags, err)
-        done = true
-      end
-    })
-
-    local completed = vim.wait(30000, function()
-      return done
-    end, 100)
-
-    assert.is_true(completed, "Build should have completed")
-
-    -- Should show status immediately after completion
-    local status_text = require("quickbuild").statusline()
-    assert.equals("Build Failed", status_text)
-
-    -- Wait for completion duration + margin
-    vim.wait(700, function() return false end)
-
-    -- Should be idle now
-    status_text = require("quickbuild").statusline()
-    assert.equals("", status_text)
-  end)
-
-  it("statusline clears immediately on cancel", function()
-    if not check_dependencies() then
-      return
-    end
-
-    local test_project = original_cwd .. "/tests/fixtures/broken_project"
-    vim.cmd("cd " .. test_project)
-
-    local scanner_path
-    local is_windows = vim.loop.os_uname().sysname:find("Windows") ~= nil
-
-    if is_windows then
-      scanner_path = original_cwd .. "/scanner/build/Release/qb-scanner.exe"
-    else
-      scanner_path = original_cwd .. "/scanner/build/qb-scanner"
-    end
-
-    assert.equals(1, vim.fn.executable(scanner_path), "Scanner binary not found at: " .. scanner_path)
-
-    require("quickbuild").setup({
-      scanner_path = scanner_path,
-      statusline = true,
     })
 
     local qb = require("quickbuild")
+    local builder = require("quickbuild.builder")
 
     qb.build({
       scanner_path = scanner_path,
     })
 
-    -- Wait for build to start
-    local builder = require("quickbuild.builder")
     local build_started = vim.wait(5000, function()
       return builder.get_status().is_running
     end, 50)
 
     assert.is_true(build_started, "Build should have started")
 
-    -- Should show building status
-    local status_text = qb.statusline()
-    assert.is_true(status_text:match("Building") ~= nil, "Should show building status: " .. tostring(status_text))
-
-    -- Cancel build
+    vim.cmd("messages clear")
     qb.cancel()
+    vim.wait(2000, function() return false end)
 
-    -- Statusline should clear immediately
-    status_text = qb.statusline()
-    assert.equals("", status_text)
-  end)
-
-  it("statusline disabled when configured", function()
-    if not check_dependencies() then
-      return
-    end
-
-    local test_project = original_cwd .. "/tests/fixtures/broken_project"
-    vim.cmd("cd " .. test_project)
-
-    local scanner_path
-    local is_windows = vim.loop.os_uname().sysname:find("Windows") ~= nil
-
-    if is_windows then
-      scanner_path = original_cwd .. "/scanner/build/Release/qb-scanner.exe"
-    else
-      scanner_path = original_cwd .. "/scanner/build/qb-scanner"
-    end
-
-    assert.equals(1, vim.fn.executable(scanner_path), "Scanner binary not found at: " .. scanner_path)
-
-    require("quickbuild").setup({
-      scanner_path = scanner_path,
-      statusline = false,
-    })
-
-    local done = false
-
-    require("quickbuild").build({
-      scanner_path = scanner_path,
-      on_complete = function(diags, err)
-        done = true
-      end
-    })
-
-    local completed = vim.wait(30000, function()
-      return done
-    end, 100)
-
-    assert.is_true(completed, "Build should have completed")
-
-    -- Statusline should always be empty when disabled
-    local status_text = require("quickbuild").statusline()
-    assert.equals("", status_text)
+    local messages = vim.fn.execute("messages")
+    assert.is_nil(messages:find("Build Failed", 1, true), "Cancelled build should not report failure: " .. messages)
   end)
 end)

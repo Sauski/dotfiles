@@ -14,8 +14,21 @@ local warning_count = 0
 local cancel_count = 0
 local current_stage = nil
 local last_build_success = nil  -- nil = no build run, true = success, false = failure
+local build_id = 0  -- Incremented on start and kill; callbacks from older builds are ignored
 local namespace = vim.api.nvim_create_namespace("quickbuild")
+local stale_namespace = vim.api.nvim_create_namespace("quickbuild_stale")
 local last_changedtick = {}  -- Track b:changedtick per buffer to detect actual changes
+
+diagnostic.setup_stale(stale_namespace)
+
+-- Kill job and its children (Windows kill only reaches powershell.exe, orphaning the build)
+local function kill_job(job, signal)
+  if vim.loop.os_uname().sysname:find("Windows") ~= nil then
+    vim.system({"taskkill", "/T", "/F", "/PID", tostring(job.pid)})
+  else
+    job:kill(signal)
+  end
+end
 
 -- Find git root from current directory
 local function find_git_root()
@@ -70,7 +83,7 @@ local function load_config(git_root)
 end
 
 -- Process scanner output line-by-line in real-time
-local function process_scanner_output(data, diagnostics, git_root, source, on_diagnostic)
+local function process_scanner_output(data, diagnostics, git_root, source)
   if not data then
     return false
   end
@@ -84,9 +97,6 @@ local function process_scanner_output(data, diagnostics, git_root, source, on_di
       if diag.severity == vim.diagnostic.severity.ERROR then
         has_error = true
       end
-      if on_diagnostic then
-        on_diagnostic(diag)
-      end
     end
   end
   return has_error
@@ -95,7 +105,7 @@ end
 -- Execute single command with scanner (async with real-time streaming)
 -- Windows: Uses PowerShell native piping to avoid vim.system() bugs
 -- Unix: Uses temporary shell script for consistent behavior
-local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic, on_complete, verbose)
+local function execute_command(cmd, name, scanner_path, git_root, on_complete, verbose)
   local diagnostics = {}
   local has_error = false
   local raw_output = {}
@@ -121,7 +131,7 @@ local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic,
 
     if data then
       vim.schedule(function()
-        if process_scanner_output(data, diagnostics, git_root, name, on_diagnostic) then
+        if process_scanner_output(data, diagnostics, git_root, name) then
           has_error = true
         end
       end)
@@ -246,7 +256,7 @@ local function execute_command(cmd, name, scanner_path, git_root, on_diagnostic,
 end
 
 -- Execute commands sequentially
-local function execute_sequential(commands, scanner_path, git_root, on_complete, verbose)
+local function execute_sequential(id, commands, scanner_path, git_root, on_complete, verbose)
   local all_diagnostics = {}
   local current_index = 1
 
@@ -271,13 +281,12 @@ local function execute_sequential(commands, scanner_path, git_root, on_complete,
       cmd_obj.name,
       scanner_path,
       git_root,
-      function(diag)
-        table.insert(all_diagnostics, diag)
-        -- Publish incrementally with coalescing
-        local coalesced = coalesce.coalesce(all_diagnostics)
-        diagnostic.publish(coalesced, namespace)
-      end,
       function(diagnostics, has_error, exit_code)
+        -- Killed build: leave state untouched
+        if id ~= build_id then
+          return
+        end
+
         -- Add to total diagnostics
         for _, diag in ipairs(diagnostics) do
           table.insert(all_diagnostics, diag)
@@ -335,11 +344,7 @@ local function start_build_now(opts)
     return
   end
 
-  -- Clear previous diagnostics
-  diagnostic.clear(namespace)
-  error_count = 0
-  warning_count = 0
-
+  build_id = build_id + 1
   local verbose = opts.verbose or false
 
   if verbose then
@@ -351,6 +356,7 @@ local function start_build_now(opts)
 
   -- Execute commands
   execute_sequential(
+    build_id,
     config.commands,
     scanner_path,
     git_root,
@@ -360,8 +366,9 @@ local function start_build_now(opts)
       -- Coalesce diagnostics by location
       local coalesced = coalesce.coalesce(diagnostics)
 
-      -- Final publish
+      -- Finished build replaces current and stale diagnostics
       diagnostic.publish(coalesced, namespace)
+      diagnostic.clear(stale_namespace)
 
       -- Count diagnostics
       error_count = 0
@@ -458,17 +465,17 @@ function M.build(opts)
   if active_job then
     local job_to_kill = active_job
     active_job = nil  -- Mark as not running immediately
+    build_id = build_id + 1
     cancel_count = cancel_count + 1
 
-    -- Check if job is already dead
-    local ok, is_alive = pcall(function() return job_to_kill:is_alive() end)
-    if not ok or not is_alive then
+    -- Check if job is already dead (handle closes on process exit)
+    if job_to_kill:is_closing() then
       start_after_cleanup()
       return
     end
 
     -- Send SIGTERM first (graceful)
-    pcall(function() job_to_kill:kill(15) end)
+    kill_job(job_to_kill, 15)
 
     -- Wait for process to die, with timeout
     local max_wait = 500  -- 500ms max wait (increased for slower systems)
@@ -476,11 +483,7 @@ function M.build(opts)
     local check_interval = 20
 
     local function check_terminated()
-      -- Check if job object is still valid and alive
-      local ok, is_alive = pcall(function() return job_to_kill:is_alive() end)
-
-      if not ok or not is_alive then
-        -- Job is dead or invalid, proceed
+      if job_to_kill:is_closing() then
         start_after_cleanup()
         return
       end
@@ -488,11 +491,7 @@ function M.build(opts)
       waited = waited + check_interval
       if waited >= max_wait then
         -- Timeout, force kill
-        pcall(function()
-          if job_to_kill:is_alive() then
-            job_to_kill:kill(9)  -- SIGKILL
-          end
-        end)
+        kill_job(job_to_kill, 9)  -- SIGKILL
         -- Wait one more cycle for SIGKILL to take effect
         vim.defer_fn(function()
           start_after_cleanup()
@@ -522,8 +521,9 @@ function M.cancel()
 
   -- Cancel running build
   if active_job then
-    active_job:kill(9)  -- SIGKILL immediately
+    kill_job(active_job, 9)  -- SIGKILL immediately
     active_job = nil
+    build_id = build_id + 1
     current_stage = nil
     statusline.set_idle()
   end
@@ -550,6 +550,16 @@ end
 -- Get diagnostic namespace
 function M.get_namespace()
   return namespace
+end
+
+-- Get stale diagnostic namespace
+function M.get_stale_namespace()
+  return stale_namespace
+end
+
+-- Mark buffer diagnostics stale (buffer edited since last build)
+function M.mark_stale(bufnr)
+  diagnostic.mark_stale(bufnr, namespace, stale_namespace)
 end
 
 -- Get project config (for init.lua to setup autocmds)

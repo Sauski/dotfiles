@@ -61,6 +61,20 @@ function M.setup(opts)
     group = vim.api.nvim_create_augroup("quickbuild_auto", { clear = true }),
   })
 
+  -- Edited buffers' diagnostics become stale until the next finished build
+  local stale_group = vim.api.nvim_create_augroup("quickbuild_stale", { clear = true })
+  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+    callback = function(ev)
+      builder.mark_stale(ev.buf)
+    end,
+    group = stale_group,
+  })
+  vim.api.nvim_create_autocmd("ColorScheme", {
+    callback = function()
+      require("quickbuild.diagnostic").define_stale_highlights()
+    end,
+    group = stale_group,
+  })
 
   -- Setup VimLeavePre to cancel builds on quit
   vim.api.nvim_create_autocmd("VimLeavePre", {
@@ -111,6 +125,11 @@ end
 -- Get diagnostic namespace (for custom integrations)
 function M.get_namespace()
   return builder.get_namespace()
+end
+
+-- Get stale diagnostic namespace
+function M.get_stale_namespace()
+  return builder.get_stale_namespace()
 end
 
 return M
